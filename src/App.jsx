@@ -1,0 +1,11 @@
+import React from 'react'
+
+const App = () => {
+  return (
+    <div>
+      <h1 className='text-2xl bg-amber-700'>hello ji is tailwidn worki g</h1>
+    </div>
+  )
+}
+
+export default App
