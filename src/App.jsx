@@ -1,11 +1,25 @@
-import React from 'react'
+import React from "react";
+import { Outlet } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Sidebar from "./components/Sidebar";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"; // ✅ Important
 
 const App = () => {
   return (
-    <div>
-      <h1 className='text-2xl bg-amber-700'>hello ji is avinah kusheaha</h1>
-    </div>
-  )
-}
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex flex-col flex-1">
+        <Navbar />
+        <main className="p-4">
+          <Outlet />
+        </main>
 
-export default App
+        {/* ✅ Toast container should be inside your main layout */}
+        <ToastContainer position="top-right" autoClose={3000} />
+      </div>
+    </div>
+  );
+};
+
+export default App;
