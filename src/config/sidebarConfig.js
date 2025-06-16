@@ -13,10 +13,9 @@ export const sidebarItemsByRole = {
 
   superadmin: [
     { key: "dashboard", label: "Dashboard", icon: adminIcon },
-    { key: "user", label: "User Management", icon: adminIcon },
-    { key: "admin", label: "Admin Management", icon: adminIcon },
-    { key: "tenant", label: "Tenant Management", icon: tenantIcon },
     { key: "property", label: "Property List", icon: propertyIcon },
+    { key: "user", label: "User Management", icon: adminIcon },
+    { key: "tenant", label: "Tenant Management", icon: tenantIcon },
     { key: "report", label: "Reports", icon: reportIcon },
     { key: "communication", label: "Communication", icon: reportIcon },
   ],

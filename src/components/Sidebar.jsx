@@ -14,7 +14,7 @@ const Sidebar = ({ activeSection, setActiveSection, role }) => {
 
   const handleItemClick = (itemKey) => {
     setActiveSection(itemKey);
-    setIsMobileMenuOpen(false); // Close mobile menu when item is selected
+    setIsMobileMenuOpen(false); 
   };
 
   return (
