@@ -11,13 +11,11 @@ import TenantHome from "./Pages/tenant/TenantHome";
 const AppLayout = () => {
   const location = useLocation();
   const [activeSection, setActiveSection] = useState("dashboard");
-  const [userRole, setUserRole] = useState("admin"); // fallback role
+  const [userRole, setUserRole] = useState("guest"); // Default to 'guest'
 
-  // Get user data from Redux store
   const { user } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    // Priority: Redux store > localStorage > default
     const roleFromStore = user?.role;
     const roleFromStorage = localStorage.getItem("userRole");
 
@@ -69,7 +67,7 @@ const AppLayout = () => {
       {/* Right section: responsive padding */}
       <div className="flex flex-col min-h-screen pl-0 md:pl-80">
         <Navbar role={userRole} />
-        <main className="flex-1 p-4 overflow-y-auto">{renderPage()}</main>
+        <main className="flex-1 p-0 md:p-4 overflow-y-auto">{renderPage()}</main>
       </div>
     </div>
   );

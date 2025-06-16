@@ -6,7 +6,6 @@ import reportIcon from "../assets/report-icon.svg";
 export const sidebarItemsByRole = {
   guest: [
     { key: "home", label: "Home", icon: adminIcon },
-    { key: "properties", label: "Browse Properties", icon: propertyIcon },
     { key: "about", label: "About Us", icon: tenantIcon },
     { key: "contact", label: "Contact", icon: reportIcon },
   ],

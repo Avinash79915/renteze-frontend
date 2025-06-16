@@ -9,7 +9,7 @@ import { FiLogIn, FiUserPlus } from "react-icons/fi";
 
 import demo from "../assets/Avatar.svg";
 
-const Navbar = ({ activeSection, setActiveSection, role}) => {
+const Navbar = ({ activeSection, setActiveSection, role }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -33,14 +33,13 @@ const Navbar = ({ activeSection, setActiveSection, role}) => {
   const handleLogout = async () => {
     try {
       setDropdownOpen(false);
-      
+
       dispatch(logout());
-      
-     
+
       localStorage.removeItem("userRole");
       localStorage.removeItem("token");
       localStorage.removeItem("authToken");
-      
+
       toast.success("Logged out successfully!", {
         position: "top-right",
         autoClose: 3000,
@@ -49,10 +48,9 @@ const Navbar = ({ activeSection, setActiveSection, role}) => {
         pauseOnHover: true,
         draggable: true,
       });
-      
+
       // Navigate to home page
       navigate("/", { replace: true });
-      
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Error logging out. Please try again.");
@@ -67,7 +65,6 @@ const Navbar = ({ activeSection, setActiveSection, role}) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       console.log("Searching for:", searchQuery);
- 
     }
   };
 
@@ -84,19 +81,22 @@ const Navbar = ({ activeSection, setActiveSection, role}) => {
   };
 
   return (
-    <nav className="bg-white shadow-md px-6 py-3 flex justify-between items-center sticky top-0 z-40 pl-16 md:pl-6">
-      {/* Left side - Logo with responsive padding to avoid hamburger overlap */}
-      <Link 
-        onClick={() => setActiveSection && setActiveSection('dashboard')} 
-        className="text-2xl font-light text-blue-600 hover:text-blue-700 transition-colors"
+    <nav className="bg-white shadow-md px-0 py-3 flex justify-between items-center sticky top-0 z-40 pl-16 md:pl-6">
+      {/* Left side - Logo */}
+      <Link
+        onClick={() => setActiveSection && setActiveSection("dashboard")}
+        className="text-2xl font-light text-[#004C86] hover:text-blue-700 transition-colors"
       >
         Renteze
       </Link>
 
       {/* Right Side */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4 relative">
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="hidden sm:flex items-center bg-gray-100 px-3 py-1 rounded-full hover:bg-gray-200 transition-colors">
+        <form
+          onSubmit={handleSearch}
+          className="hidden sm:flex items-center bg-gray-100 px-5 py-1 rounded-full hover:bg-gray-200 transition-colors"
+        >
           <FiSearch className="text-gray-500 mr-2" />
           <input
             type="text"
@@ -108,7 +108,7 @@ const Navbar = ({ activeSection, setActiveSection, role}) => {
         </form>
 
         {isAuthenticated ? (
-          <div className="flex items-center space-x-4 relative" ref={dropdownRef}>
+          <div className="flex items-center space-x-4" ref={dropdownRef}>
             {/* Profile Image */}
             <img
               src={user?.profilePicture || demo}
@@ -126,53 +126,55 @@ const Navbar = ({ activeSection, setActiveSection, role}) => {
             {/* Settings Icon */}
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className={`text-gray-600 hover:text-gray-800 relative z-30 transition-all duration-300 p-1 rounded-full hover:bg-gray-100 ${
-                dropdownOpen ? "rotate-90 bg-gray-100" : "rotate-0"
-              }`}
+              className={`text-gray-600 hover:text-gray-800 relative z-30 transition-all duration-300 p-2 rounded-full hover:bg-gray-100`}
               aria-label="Settings menu"
             >
               <FiSettings size={22} />
             </button>
 
-            {/* Dropdown */}
-            {dropdownOpen && (
-              <div className="absolute right-0 top-12 w-48 bg-white border shadow-lg rounded-lg z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <p className="text-sm font-medium text-gray-900">
-                    {user?.username || user?.name || "User"}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {user?.email || "user@example.com"}
-                  </p>
-                </div>
-                
-                <button
-                  className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                  onClick={handleEditProfile}
-                >
-                  <FiEdit className="mr-3 text-gray-500" size={16} />
-                  Edit Profile
-                </button>
-                
-                <button
-                  className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                  onClick={handleSettings}
-                >
-                  <FiSettings className="mr-3 text-gray-500" size={16} />
-                  Settings
-                </button>
-                
-                <hr className="my-1" />
-                
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <FiLogOut className="mr-3" size={16} />
-                  Logout
-                </button>
+            {/* Dropdown Menu - Always in DOM */}
+            <div
+              className={`absolute right-0 top-12 w-48 bg-white border shadow-lg rounded-lg z-50 py-1 transition-all duration-200 transform origin-top-right ${
+                dropdownOpen
+                  ? "scale-100 opacity-100 pointer-events-auto"
+                  : "scale-95 opacity-0 pointer-events-none"
+              }`}
+            >
+              <div className="px-4 py-2 border-b border-gray-100">
+                <p className="text-sm font-medium text-gray-900">
+                  {user?.username || user?.name || "User"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {user?.email || "user@example.com"}
+                </p>
               </div>
-            )}
+
+              <button
+                className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={handleEditProfile}
+              >
+                <FiEdit className="mr-3 text-gray-500" size={16} />
+                Edit Profile
+              </button>
+
+              <button
+                className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={handleSettings}
+              >
+                <FiSettings className="mr-3 text-gray-500" size={16} />
+                Settings
+              </button>
+
+              <hr className="my-1" />
+
+              <button
+                onClick={handleLogout}
+                className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <FiLogOut className="mr-3" size={16} />
+                Logout
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex items-center space-x-3">

@@ -333,7 +333,7 @@ const AdminDashboard = ({ setActiveSection }) => {
   };
 
   return (
-    <div className="space-y-8 p-6 bg-gray-50 min-h-screen">
+    <div className="space-y-8 p-0 md:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -374,14 +374,14 @@ const AdminDashboard = ({ setActiveSection }) => {
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`p-3 rounded-lg ${item.color} bg-opacity-10`}>
-                  <Icon className={`w-6 h-6 ${textColor}`} strokeWidth={2} />
+                  <Icon className={`w-8 h-8 ${textColor}`} strokeWidth={2} />
                 </div>
                 <div
                   className={`flex items-center gap-1 text-sm ${
                     item.trend === "up" ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  <TrendIcon className="w-4 h-4" />
+                  <TrendIcon className="w-8 h-8" />
                   {item.change}
                 </div>
               </div>
@@ -393,7 +393,7 @@ const AdminDashboard = ({ setActiveSection }) => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
         <h2 className="text-xl font-semibold text-[#1652A1] mb-4">
           Quick Actions
         </h2>
@@ -499,89 +499,124 @@ const AdminDashboard = ({ setActiveSection }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Tenants */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h2 className="text-xl font-semibold text-[#1652A1]">
-              Recent Tenants
-            </h2>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search tenants..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent text-sm"
-                />
+        <div className="lg:col-span-2 bg-white p-2 md:p-6 rounded-xl shadow-sm border border-gray-100">
+  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <h2 className="text-xl font-semibold text-[#1652A1]">
+      Recent Tenants
+    </h2>
+    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+      <div className="relative w-full sm:w-auto">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <input
+          type="text"
+          placeholder="Search tenants..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full sm:w-auto pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent text-sm"
+        />
+      </div>
+      <button
+        onClick={() => setActiveSection("tenants")}
+        className="text-[#1652A1] hover:text-[#143d7a] flex items-center gap-2 text-sm font-medium whitespace-nowrap"
+      >
+        View All <Eye className="w-4 h-4" />
+      </button>
+    </div>
+  </div>
+  <div className="overflow-x-auto">
+    {/* Desktop Table */}
+    <table className="min-w-full hidden md:table">
+      <thead>
+        <tr className="border-b border-gray-200">
+          <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+            Tenant
+          </th>
+          <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+            Property
+          </th>
+          <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+            Rent
+          </th>
+          <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+            Status
+          </th>
+          <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+            Joined
+          </th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-100">
+        {filteredTenants.slice(0, 5).map((tenant, index) => (
+          <tr key={index} className="hover:bg-gray-50">
+            <td className="px-4 py-4">
+              <div>
+                <div className="font-medium text-gray-900">
+                  {tenant.name}
+                </div>
+                <div className="text-sm text-gray-500 flex items-center gap-1">
+                  <Mail className="w-3 h-3" />
+                  {tenant.email}
+                </div>
               </div>
-              <button
-                onClick={() => setActiveSection("tenants")}
-                className="text-[#1652A1] hover:text-[#143d7a] flex items-center gap-2 text-sm font-medium whitespace-nowrap"
+            </td>
+            <td className="px-4 py-4 text-sm text-gray-900">
+              {tenant.property}
+            </td>
+            <td className="px-4 py-4 text-sm font-medium text-gray-900">
+              {tenant.rent}
+            </td>
+            <td className="px-4 py-4">
+              <span
+                className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getTenantStatusColor(
+                  tenant.status
+                )}`}
               >
-                View All <Eye className="w-4 h-4" />
-              </button>
+                {tenant.status}
+              </span>
+            </td>
+            <td className="px-4 py-4 text-sm text-gray-500">
+              {tenant.joined}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    {/* Mobile Card Layout */}
+    <div className="md:hidden space-y-4">
+      {filteredTenants.slice(0, 5).map((tenant, index) => (
+        <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-100 hover:bg-gray-100">
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="font-medium text-gray-900">{tenant.name}</div>
+                <div className="text-sm text-gray-500 flex items-center gap-1">
+                  <Mail className="w-3 h-3" />
+                  {tenant.email}
+                </div>
+              </div>
+              <span
+                className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getTenantStatusColor(
+                  tenant.status
+                )}`}
+              >
+                {tenant.status}
+              </span>
+            </div>
+            <div className="text-sm text-gray-900">
+              <span className="font-medium">Property:</span> {tenant.property}
+            </div>
+            <div className="text-sm font-medium text-gray-900">
+              <span className="font-medium">Rent:</span> {tenant.rent}
+            </div>
+            <div className="text-sm text-gray-500">
+              <span className="font-medium">Joined:</span> {tenant.joined}
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                    Tenant
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                    Property
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                    Rent
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                    Joined
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredTenants.slice(0, 5).map((tenant, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 py-4">
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {tenant.name}
-                        </div>
-                        <div className="text-sm text-gray-500 flex items-center gap-1">
-                          <Mail className="w-3 h-3" />
-                          {tenant.email}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900">
-                      {tenant.property}
-                    </td>
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                      {tenant.rent}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getTenantStatusColor(
-                          tenant.status
-                        )}`}
-                      >
-                        {tenant.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
-                      {tenant.joined}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
+      ))}
+    </div>
+  </div>
+</div>
 
         {/* Recent Activities */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
