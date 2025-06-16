@@ -83,6 +83,89 @@ const tenantData = [
   },
 ];
 
+const initialPaymentData = [
+  {
+    id: 1,
+    tenantName: "John Doe",
+    amount: "₹25,000",
+    invoiceMonth: "January 2024",
+    invoiceType: "Rent",
+    status: "Paid",
+    paidOn: "15/01/2024",
+    paymentMethod: "Bank Transfer"
+  },
+  {
+    id: 2,
+    tenantName: "Anita Sharma",
+    amount: "₹30,000",
+    invoiceMonth: "February 2024",
+    invoiceType: "Rent",
+    status: "Unpaid",
+    paidOn: "-",
+    paymentMethod: "-"
+  },
+  {
+    id: 3,
+    tenantName: "Vikram Singh",
+    amount: "₹15,000",
+    invoiceMonth: "January 2024",
+    invoiceType: "Maintenance",
+    status: "Paid",
+    paidOn: "10/01/2024",
+    paymentMethod: "Cash"
+  },
+  {
+    id: 4,
+    tenantName: "Sara Khan",
+    amount: "₹28,000",
+    invoiceMonth: "February 2024",
+    invoiceType: "Rent",
+    status: "Unpaid",
+    paidOn: "-",
+    paymentMethod: "-"
+  },
+  {
+    id: 5,
+    tenantName: "Ravi Patel",
+    amount: "₹22,000",
+    invoiceMonth: "January 2024",
+    invoiceType: "Rent",
+    status: "Paid",
+    paidOn: "05/01/2024",
+    paymentMethod: "UPI"
+  },
+  {
+    id: 6,
+    tenantName: "Sneha Roy",
+    amount: "₹35,000",
+    invoiceMonth: "February 2024",
+    invoiceType: "Rent",
+    status: "Unpaid",
+    paidOn: "-",
+    paymentMethod: "-"
+  },
+  {
+    id: 7,
+    tenantName: "Manoj Yadav",
+    amount: "₹12,000",
+    invoiceMonth: "January 2024",
+    invoiceType: "Utilities",
+    status: "Paid",
+    paidOn: "20/01/2024",
+    paymentMethod: "Cheque"
+  },
+  {
+    id: 8,
+    tenantName: "Divya Mehra",
+    amount: "₹26,000",
+    invoiceMonth: "February 2024",
+    invoiceType: "Rent",
+    status: "Unpaid",
+    paidOn: "-",
+    paymentMethod: "-"
+  }
+];
+
 const statusColors = {
   Occupied: "bg-green-500",
   Available: "bg-red-500",
@@ -90,9 +173,17 @@ const statusColors = {
   "Concerns Pending": "bg-purple-500",
 };
 
+const paymentStatusColors = {
+  Paid: "bg-green-500 text-white",
+  Unpaid: "bg-red-500 text-white",
+};
+
 const Reports = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [paymentData, setPaymentData] = useState(initialPaymentData);
+  const [paymentSearchTerm, setPaymentSearchTerm] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
 
   const filteredTenants = tenantData.filter((tenant) => {
     const matchesSearch =
@@ -104,6 +195,46 @@ const Reports = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  const filteredPayments = paymentData.filter((payment) => {
+    const matchesSearch =
+      payment.tenantName.toLowerCase().includes(paymentSearchTerm.toLowerCase()) ||
+      payment.shop.toLowerCase().includes(paymentSearchTerm.toLowerCase()) ||
+      payment.invoiceMonth.toLowerCase().includes(paymentSearchTerm.toLowerCase());
+
+    const matchesStatus =
+      paymentStatusFilter === "" || payment.status === paymentStatusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const updatePaymentStatus = (id, newStatus, paymentMethod = "") => {
+    setPaymentData(prevData =>
+      prevData.map(payment => {
+        if (payment.id === id) {
+          const currentDate = new Date().toLocaleDateString('en-GB');
+          return {
+            ...payment,
+            status: newStatus,
+            paidOn: newStatus === "Paid" ? currentDate : "-",
+            paymentMethod: newStatus === "Paid" ? paymentMethod : "-"
+          };
+        }
+        return payment;
+      })
+    );
+  };
+
+  const handleStatusChange = (id, newStatus) => {
+    if (newStatus === "Paid") {
+      const paymentMethod = prompt("Enter payment method (Bank Transfer, Cash, UPI, Cheque):");
+      if (paymentMethod) {
+        updatePaymentStatus(id, newStatus, paymentMethod);
+      }
+    } else {
+      updatePaymentStatus(id, newStatus);
+    }
+  };
 
   return (
     <div className="p-5">
@@ -144,7 +275,7 @@ const Reports = () => {
       </div>
 
       {/* Tenant Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto mb-8">
         <table className="w-full border-collapse text-md">
           <thead>
             <tr className="bg-gray-100 text-left text-[#1652A1]">
@@ -180,6 +311,97 @@ const Reports = () => {
               <tr>
                 <td colSpan="6" className="text-center py-4 text-gray-500">
                   No records found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Payment Report Section */}
+      <h2 className="text-2xl mb-3 text-[#1652A1]">Payment Report</h2>
+
+      {/* Payment Status Indicators */}
+      <div className="flex gap-3 mb-5 flex-wrap">
+        {Object.entries(paymentStatusColors).map(([label, color]) => (
+          <div
+            key={label}
+            onClick={() =>
+              setPaymentStatusFilter(paymentStatusFilter === label ? "" : label)
+            }
+            className={`flex items-center gap-2 rounded-full cursor-pointer bg-[#F6F6F6] p-3 w-40 hover:bg-white hover:shadow transition ${
+              paymentStatusFilter === label ? "ring-2 ring-blue-400" : ""
+            }`}
+          >
+            <span
+              className={`w-8 h-8 rounded-full shrink-0 ${color.split(' ')[0]}`}
+            ></span>
+            <span className="break-words flex-1">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Payment Search Bar */}
+      <div className="mb-5">
+        <input
+          type="text"
+          placeholder="Search by tenant name / Shop No / Invoice Month"
+          value={paymentSearchTerm}
+          onChange={(e) => setPaymentSearchTerm(e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* Payment Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-md">
+          <thead>
+            <tr className="bg-gray-100 text-left text-[#1652A1]">
+              <th className="p-3 border-b border-gray-200">Tenant Name</th>
+              <th className="p-3 border-b border-gray-200">Amount</th>
+              <th className="p-3 border-b border-gray-200">Invoice Month</th>
+              <th className="p-3 border-b border-gray-200">Invoice Type</th>
+              <th className="p-3 border-b border-gray-200">Status</th>
+              <th className="p-3 border-b border-gray-200">Paid On</th>
+              <th className="p-3 border-b border-gray-200">Payment Method</th>
+              <th className="p-3 border-b border-gray-200">Update Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredPayments.length > 0 ? (
+              filteredPayments.map((payment) => (
+                <tr key={payment.id} className="border-b">
+                  <td className="p-3">{payment.tenantName}</td>
+                  <td className="p-3 font-semibold">{payment.amount}</td>
+                  <td className="p-3">{payment.invoiceMonth}</td>
+                  <td className="p-3">{payment.invoiceType}</td>
+                  <td className="p-3">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        paymentStatusColors[payment.status]
+                      }`}
+                    >
+                      {payment.status}
+                    </span>
+                  </td>
+                  <td className="p-3">{payment.paidOn}</td>
+                  <td className="p-3">{payment.paymentMethod}</td>
+                  <td className="p-3">
+                    <select
+                      value={payment.status}
+                      onChange={(e) => handleStatusChange(payment.id, e.target.value)}
+                      className="p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Paid">Paid</option>
+                      <option value="Unpaid">Unpaid</option>
+                    </select>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="9" className="text-center py-4 text-gray-500">
+                  No payment records found.
                 </td>
               </tr>
             )}

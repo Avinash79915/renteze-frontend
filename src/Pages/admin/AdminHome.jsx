@@ -1,10 +1,10 @@
 // src/Pages/admin/AdminHome.jsx
 import React from "react";
-import PropertyList from "../../components/PropertyCard";
+import PropertyList from "../../components/SuperAdminComponent/PropertyListing";
 import Communication from "../../components/Communication";
 import Report from "../../components/Report";
 import Dashboard from "../../components/AdminComponents/AdminDashboard";
-import TenantManagement from "../../components/AdminComponents/TenantManagement";
+import TenantManagement from "../../components/SuperAdminComponent/TenantManagement";
 const AdminHome = ({ activeSection, setActiveSection }) => {
   const renderComponent = () => {
     switch (activeSection) {
