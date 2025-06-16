@@ -81,7 +81,7 @@ const Navbar = ({ activeSection, setActiveSection, role }) => {
   };
 
   return (
-    <nav className="bg-white shadow-md px-0 py-3 flex justify-between items-center sticky top-0 z-40 pl-16 md:pl-6">
+    <nav className="bg-white shadow-md md:px-6 px-3 py-3 flex justify-between items-center sticky top-0 z-40 pl-16 md:pl-6">
       {/* Left side - Logo */}
       <Link
         onClick={() => setActiveSection && setActiveSection("dashboard")}

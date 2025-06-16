@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { login } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import SignUp from "./SignUp";
+import SignUp from "./Signup";
 import ForgotPassword from "./ForgotPassword";
 import OtpVerification from "./OtpVerification";
 import logo from "../assets/white-logo.svg";
