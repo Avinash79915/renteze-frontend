@@ -31,7 +31,7 @@ const SuperAdmin = ({ activeSection, setActiveSection }) => {
 
   return (
     <div className="flex w-full">
-      <div className="flex-1 p-6">{renderComponent()}</div>
+      <div className="flex-1 p-3 md:p-6">{renderComponent()}</div>
     </div>
   );
 };

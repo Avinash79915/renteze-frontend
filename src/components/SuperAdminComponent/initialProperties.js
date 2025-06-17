@@ -1,3 +1,6 @@
+
+import property2 from "../../assets/property-2.jpg";
+
 const initialProperties = [
   {
     id: 1,
@@ -13,7 +16,7 @@ const initialProperties = [
         occupancyStatus: "Occupied",
         tenant: { name: "Ravi Kumar", contact: "ravi.kumar@email.com" },
         rooms: { bedrooms: 2, bathrooms: 2, livingRooms: 1 },
-        image: "/assets/units/sunrise-101.jpg",
+        image: property2,
       },
       {
         id: "unit-1-2",
@@ -24,7 +27,7 @@ const initialProperties = [
         occupancyStatus: "Vacant",
         tenant: null,
         rooms: { bedrooms: 2, bathrooms: 1, livingRooms: 1 },
-        image: "/assets/units/sunrise-102.jpg",
+        image: property2,
       },
       {
         id: "unit-1-3",
@@ -35,7 +38,7 @@ const initialProperties = [
         occupancyStatus: "Occupied",
         tenant: { name: "Anjali Sharma", contact: "anjali.sharma@email.com" },
         rooms: { bedrooms: 3, bathrooms: 2, livingRooms: 1 },
-        image: "/assets/units/sunrise-201.jpg",
+        image: property2,
       },
     ],
   },
@@ -53,7 +56,7 @@ const initialProperties = [
         occupancyStatus: "Occupied",
         tenant: { name: "Priya Menon", contact: "priya.menon@email.com" },
         rooms: { bedrooms: 3, bathrooms: 2, livingRooms: 1 },
-        image: "/assets/units/palm-a1.jpg",
+        image: property2,
       },
       {
         id: "unit-2-2",
@@ -64,7 +67,7 @@ const initialProperties = [
         occupancyStatus: "Vacant",
         tenant: null,
         rooms: { bedrooms: 2, bathrooms: 2, livingRooms: 1 },
-        image: "/assets/units/palm-a2.jpg",
+        image: property2,
       },
       {
         id: "unit-2-3",
@@ -75,7 +78,7 @@ const initialProperties = [
         occupancyStatus: "Occupied",
         tenant: { name: "Amit Patel", contact: "amit.patel@email.com" },
         rooms: { bedrooms: 3, bathrooms: 3, livingRooms: 1 },
-        image: "/assets/units/palm-b1.jpg",
+        image: property2,
       },
     ],
   },
@@ -95,7 +98,7 @@ const initialProperties = [
         occupancyStatus: "Vacant",
         tenant: null,
         rooms: { bedrooms: 2, bathrooms: 1, livingRooms: 1 },
-        image: "/assets/units/green-g1.jpg",
+        image: property2,
       },
       {
         id: "unit-5-2",
@@ -106,7 +109,7 @@ const initialProperties = [
         occupancyStatus: "Occupied",
         tenant: { name: "Sonia Gupta", contact: "sonia.gupta@email.com" },
         rooms: { bedrooms: 3, bathrooms: 2, livingRooms: 1 },
-        image: "/assets/units/green-g2.jpg",
+        image: property2,
       },
       {
         id: "unit-5-3",
@@ -117,57 +120,12 @@ const initialProperties = [
         occupancyStatus: "Vacant",
         tenant: null,
         rooms: { bedrooms: 2, bathrooms: 2, livingRooms: 1 },
-        image: "/assets/units/green-h1.jpg",
+        image:property2,
       },
     ],
   },
-  {
-    id: 6,
-    name: "Lakefront Villa",
-    address: "303 Lake St, Lakeside",
-    units: [
-      {
-        id: "unit-6-1",
-        unitNumber: "V1",
-        unitType: "Villa",
-        floorNumber: 1,
-        area: 2000,
-        occupancyStatus: "Occupied",
-        tenant: { name: "Vikram Singh", contact: "vikram.singh@email.com" },
-        rooms: { bedrooms: 4, bathrooms: 3, livingRooms: 2 },
-        image: "/assets/units/lakefront-v1.jpg",
-      },
-      {
-        id: "unit-6-2",
-        unitNumber: "V2",
-        unitType: "Villa",
-        floorNumber: 1,
-        area: 2100,
-        occupancyStatus: "Vacant",
-        tenant: null,
-        rooms: { bedrooms: 4, bathrooms: 3, livingRooms: 2 },
-        image: "/assets/units/lakefront-v2.jpg",
-      },
-      {
-        id: "unit-6-3",
-        unitNumber: "V3",
-        unitType: "Villa",
-        floorNumber: 1,
-        area: 2200,
-        occupancyStatus: "Occupied",
-        tenant: { name: "Neha Kapoor", contact: "neha.kapoor@email.com" },
-        rooms: { bedrooms: 5, bathrooms: 4, livingRooms: 2 },
-        image: "/assets/units/lakefront-v3.jpg",
-      },
-    ],
-  },
-  {
-    id: 7,
-    name: "Mountain Edge",
-    address: "404 Mountain Rd, Peaksville",
-    units: [],
-  },
-  { id: 8, name: "City Lights", address: "505 Light Ave, Downtown", units: [] },
+ 
+  
 ];
 
 export default initialProperties;

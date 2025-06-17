@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { Plus, X, Save, Upload, Home, Zap, Droplets, Trash2 } from "lucide-react";
+import {
+  Plus,
+  X,
+  Save,
+  Upload,
+  Home,
+  Zap,
+  Droplets,
+  Trash2,
+} from "lucide-react";
 
 const PropertyForm = ({ setShowAddForm, setProperties }) => {
   const [activeTab, setActiveTab] = useState("basic");
@@ -86,10 +95,12 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 mb-6">
-      <div className="p-6 border-b border-gray-200">
+    <div className="bg-white rounded-lg border border-gray-200 mb-6   shadow-lg">
+      <div className="p-3 md:p-6 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <h3 className="text-xl font-semibold text-[#1652A1]">Add New Property</h3>
+          <h3 className="text-xl font-semibold text-[#1652A1]">
+            Add New Property
+          </h3>
           <button
             onClick={() => {
               setShowAddForm(false);
@@ -101,7 +112,7 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
           </button>
         </div>
 
-        <div className="flex space-x-1 mt-4 bg-gray-100 p-1 rounded-lg">
+        <div className="flex flex-wrap gap-3 mt-4 bg-gray-100 p-1 sm:p-3 rounded-lg">
           {[
             { id: "basic", label: "Basic Info", icon: Home },
             { id: "units", label: "Units", icon: Home },
@@ -127,7 +138,7 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-2 md:p-6">
         {activeTab === "basic" && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -139,7 +150,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                   type="text"
                   value={propertyForm.name}
                   onChange={(e) =>
-                    setPropertyForm((prev) => ({ ...prev, name: e.target.value }))
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                   required
@@ -154,7 +168,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                   type="text"
                   value={propertyForm.propertyNo}
                   onChange={(e) =>
-                    setPropertyForm((prev) => ({ ...prev, propertyNo: e.target.value }))
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      propertyNo: e.target.value,
+                    }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                   required
@@ -168,7 +185,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                   type="text"
                   value={propertyForm.address}
                   onChange={(e) =>
-                    setPropertyForm((prev) => ({ ...prev, address: e.target.value }))
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      address: e.target.value,
+                    }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                   required
@@ -182,7 +202,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                   type="text"
                   value={propertyForm.locationPin}
                   onChange={(e) =>
-                    setPropertyForm((prev) => ({ ...prev, locationPin: e.target.value }))
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      locationPin: e.target.value,
+                    }))
                   }
                   placeholder="Enter location pin"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
@@ -195,7 +218,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                 <select
                   value={propertyForm.type}
                   onChange={(e) =>
-                    setPropertyForm((prev) => ({ ...prev, type: e.target.value }))
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      type: e.target.value,
+                    }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                 >
@@ -216,7 +242,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                   type="number"
                   value={propertyForm.floors}
                   onChange={(e) =>
-                    setPropertyForm((prev) => ({ ...prev, floors: e.target.value }))
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      floors: e.target.value,
+                    }))
                   }
                   placeholder="e.g. 3"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
@@ -233,7 +262,9 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                     accept=".jpg,.jpeg,.png"
                     className="hidden"
                     id="propertyImageUpload"
-                    onChange={(e) => console.log("Property Image uploaded:", e.target.files[0])}
+                    onChange={(e) =>
+                      console.log("Property Image uploaded:", e.target.files[0])
+                    }
                   />
                   <label
                     htmlFor="propertyImageUpload"
@@ -250,8 +281,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
 
         {activeTab === "units" && (
           <div className="space-y-6">
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-3">Add Unit</h4>
+            <div className="border border-gray-200 rounded-lg p-2 md:p-4">
+              <h4 className="text-lg font-medium text-gray-900 mb-3">
+                Add Unit
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -261,7 +294,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                     type="text"
                     value={unitForm.unitNumber}
                     onChange={(e) =>
-                      setUnitForm((prev) => ({ ...prev, unitNumber: e.target.value }))
+                      setUnitForm((prev) => ({
+                        ...prev,
+                        unitNumber: e.target.value,
+                      }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                     required
@@ -289,7 +325,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                     type="number"
                     value={unitForm.floorNumber}
                     onChange={(e) =>
-                      setUnitForm((prev) => ({ ...prev, floorNumber: e.target.value }))
+                      setUnitForm((prev) => ({
+                        ...prev,
+                        floorNumber: e.target.value,
+                      }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                   />
@@ -301,7 +340,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                   <select
                     value={unitForm.unitType}
                     onChange={(e) =>
-                      setUnitForm((prev) => ({ ...prev, unitType: e.target.value }))
+                      setUnitForm((prev) => ({
+                        ...prev,
+                        unitType: e.target.value,
+                      }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                   >
@@ -322,14 +364,18 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                       multiple
                       className="hidden"
                       id="unitImagesUpload"
-                      onChange={(e) => console.log("Unit Images uploaded:", e.target.files)}
+                      onChange={(e) =>
+                        console.log("Unit Images uploaded:", e.target.files)
+                      }
                     />
                     <label
                       htmlFor="unitImagesUpload"
                       className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
                     >
                       <Upload className="w-4 h-4 text-gray-600" />
-                      <span className="text-sm text-gray-600">Upload Images</span>
+                      <span className="text-sm text-gray-600">
+                        Upload Images
+                      </span>
                     </label>
                   </div>
                 </div>
@@ -340,7 +386,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                   <textarea
                     value={unitForm.amenities}
                     onChange={(e) =>
-                      setUnitForm((prev) => ({ ...prev, amenities: e.target.value }))
+                      setUnitForm((prev) => ({
+                        ...prev,
+                        amenities: e.target.value,
+                      }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                     rows="3"
@@ -354,7 +403,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                   <select
                     value={unitForm.occupancyStatus}
                     onChange={(e) =>
-                      setUnitForm((prev) => ({ ...prev, occupancyStatus: e.target.value }))
+                      setUnitForm((prev) => ({
+                        ...prev,
+                        occupancyStatus: e.target.value,
+                      }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                   >
@@ -376,7 +428,9 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
 
             {units.length > 0 && (
               <div className="mt-6">
-                <h4 className="text-lg font-medium text-gray-900 mb-3">Added Units</h4>
+                <h4 className="text-lg font-medium text-gray-900 mb-3">
+                  Added Units
+                </h4>
                 <div className="space-y-3">
                   {units.map((unit) => (
                     <div
@@ -388,7 +442,8 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                           Unit {unit.unitNumber} ({unit.unitType})
                         </p>
                         <p className="text-sm text-gray-600">
-                          Floor: {unit.floorNumber}, Area: {unit.area} Sqft, Status: {unit.occupancyStatus}
+                          Floor: {unit.floorNumber}, Area: {unit.area} Sqft,
+                          Status: {unit.occupancyStatus}
                         </p>
                       </div>
                       <button
@@ -421,7 +476,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                     type="text"
                     value={propertyForm.waterMeterNo}
                     onChange={(e) =>
-                      setPropertyForm((prev) => ({ ...prev, waterMeterNo: e.target.value }))
+                      setPropertyForm((prev) => ({
+                        ...prev,
+                        waterMeterNo: e.target.value,
+                      }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                   />
@@ -442,7 +500,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                     type="text"
                     value={propertyForm.electricMeterNo}
                     onChange={(e) =>
-                      setPropertyForm((prev) => ({ ...prev, electricMeterNo: e.target.value }))
+                      setPropertyForm((prev) => ({
+                        ...prev,
+                        electricMeterNo: e.target.value,
+                      }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                   />
@@ -457,7 +518,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                 <textarea
                   value={propertyForm.amenities}
                   onChange={(e) =>
-                    setPropertyForm((prev) => ({ ...prev, amenities: e.target.value }))
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      amenities: e.target.value,
+                    }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                   rows="3"
@@ -471,7 +535,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                 <select
                   value={propertyForm.occupancyStatus}
                   onChange={(e) =>
-                    setPropertyForm((prev) => ({ ...prev, occupancyStatus: e.target.value }))
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      occupancyStatus: e.target.value,
+                    }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                 >
@@ -497,7 +564,12 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                     multiple
                     className="hidden"
                     id="agreementTemplatesUpload"
-                    onChange={(e) => console.log("Agreement Templates uploaded:", e.target.files)}
+                    onChange={(e) =>
+                      console.log(
+                        "Agreement Templates uploaded:",
+                        e.target.files
+                      )
+                    }
                   />
                   <label
                     htmlFor="agreementTemplatesUpload"
@@ -519,7 +591,9 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                     multiple
                     className="hidden"
                     id="pastAgreementsUpload"
-                    onChange={(e) => console.log("Past Agreements uploaded:", e.target.files)}
+                    onChange={(e) =>
+                      console.log("Past Agreements uploaded:", e.target.files)
+                    }
                   />
                   <label
                     htmlFor="pastAgreementsUpload"
@@ -538,7 +612,10 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
               <textarea
                 value={propertyForm.unitHistory}
                 onChange={(e) =>
-                  setPropertyForm((prev) => ({ ...prev, unitHistory: e.target.value }))
+                  setPropertyForm((prev) => ({
+                    ...prev,
+                    unitHistory: e.target.value,
+                  }))
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                 rows="3"
@@ -549,7 +626,7 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
         )}
       </div>
 
-      <div className="p-6 border-t border-gray-200">
+      <div className=" p-2 md:p-6 border-t border-gray-200">
         <div className="flex justify-end gap-3">
           <button
             onClick={() => {

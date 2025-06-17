@@ -49,21 +49,17 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // Set loading state
     setLoading: (state, action) => {
       state.isLoading = action.payload;
     },
 
-    // Clear any errors
     clearError: (state) => {
       state.error = null;
     },
 
-    // Login action with enhanced validation
     login: (state, action) => {
       const { username, password } = action.payload;
 
-      // Input validation
       if (!username || !password) {
         state.error = "Username and password are required";
         state.isLoading = false;
@@ -89,7 +85,6 @@ const authSlice = createSlice({
       );
 
       if (foundUser) {
-        // Create user object with additional login info
         const userWithLoginInfo = {
           ...foundUser,
           lastLoginTime: new Date().toISOString(),
@@ -102,7 +97,6 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.lastLoginTime = userWithLoginInfo.lastLoginTime;
 
-        // Store in localStorage
         setStoredUser(userWithLoginInfo);
       } else {
         state.user = null;
@@ -112,7 +106,7 @@ const authSlice = createSlice({
       }
     },
 
-    // Logout action with complete cleanup
+    
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
@@ -120,11 +114,9 @@ const authSlice = createSlice({
       state.isLoading = false;
       state.lastLoginTime = null;
 
-      // Clear all auth-related storage
       clearAuthStorage();
     },
 
-    // Force logout (for security purposes)
     forceLogout: (state, action) => {
       state.user = null;
       state.isAuthenticated = false;
@@ -135,7 +127,6 @@ const authSlice = createSlice({
       clearAuthStorage();
     },
 
-    // Update user profile
     updateUserProfile: (state, action) => {
       if (state.user) {
         const updatedUser = { ...state.user, ...action.payload };
@@ -144,7 +135,6 @@ const authSlice = createSlice({
       }
     },
 
-    // Change password
     changePassword: (state, action) => {
       const { currentPassword, newPassword } = action.payload;
 
@@ -173,14 +163,12 @@ const authSlice = createSlice({
         return;
       }
 
-      // Update password
       const updatedUser = { ...state.user, password: newPassword };
       state.user = updatedUser;
       state.error = null;
       setStoredUser(updatedUser);
     },
 
-    // Refresh user data
     refreshUserData: (state) => {
       const storedUser = getStoredUser();
       if (storedUser) {
