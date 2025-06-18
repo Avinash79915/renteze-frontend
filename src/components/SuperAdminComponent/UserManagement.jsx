@@ -182,7 +182,7 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="p-6  mx-auto">
+    <div className="p-1 md:p-6 mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[#1652A1] mb-2">
           User Management
@@ -220,7 +220,7 @@ const UserManagement = () => {
         </div>
         <button
           onClick={() => setShowInviteModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          className="bg-[#1652A1] hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Invite Admin
@@ -275,31 +275,32 @@ const UserManagement = () => {
         </div>
       </div>
 
-      {/* Admin List */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Admin List</h2>
+        <div className="px-4 py-3 md:px-6 md:py-4 border-b border-gray-200">
+          <h2 className="text-base md:text-lg font-semibold text-gray-900">
+            Admin List
+          </h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="min-w-full text-sm md:text-base hidden md:table">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-2 py-2 md:px-6 md:py-3 font-medium text-gray-500 uppercase tracking-wider">
                   Admin
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-2 py-2 md:px-6 md:py-3 font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-2 py-2 md:px-6 md:py-3 font-medium text-gray-500 uppercase tracking-wider">
                   Assigned Properties
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-2 py-2 md:px-6 md:py-3 font-medium text-gray-500 uppercase tracking-wider">
                   Join Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-2 py-2 md:px-6 md:py-3 font-medium text-gray-500 uppercase tracking-wider">
                   Last Login
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-2 py-2 md:px-6 md:py-3 font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -307,13 +308,13 @@ const UserManagement = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredAdmins.map((admin) => (
                 <tr key={admin.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-2 py-2 md:px-6 md:py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-gray-600" />
+                      <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <div className="ml-2 md:ml-4">
+                        <div className="text-sm md:text-base font-medium text-gray-900">
                           {admin.name}
                         </div>
                         <div className="text-sm text-gray-500">
@@ -322,9 +323,9 @@ const UserManagement = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-2 py-2 md:px-6 md:py-4 whitespace-nowrap">
                     <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      className={`inline-flex px-1 py-0.5 md:px-2 md:py-1 text-xs md:text-xs font-semibold rounded-full ${
                         admin.status === "Active"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
@@ -333,53 +334,53 @@ const UserManagement = () => {
                       {admin.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-2 py-2 md:px-6 md:py-4">
                     <div className="flex flex-wrap gap-1">
                       {admin.assignedProperties
                         .slice(0, 2)
                         .map((property, index) => (
                           <span
                             key={index}
-                            className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded"
+                            className="inline-flex px-1 py-0.5 md:px-2 md:py-1 text-xs bg-blue-100 text-blue-800 rounded"
                           >
                             {property}
                           </span>
                         ))}
                       {admin.assignedProperties.length > 2 && (
-                        <span className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                        <span className="inline-flex px-1 py-0.5 md:px-2 md:py-1 text-xs bg-gray-100 text-gray-600 rounded">
                           +{admin.assignedProperties.length - 2} more
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm md:text-base text-gray-900">
                     {admin.joinDate}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm md:text-base text-gray-900">
                     {admin.lastLogin}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex gap-2">
+                  <td className="px-2 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm md:text-base font-medium">
+                    <div className="flex gap-1 md:gap-2">
                       <button
                         onClick={() => openEditModal(admin)}
                         className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
                         title="Edit Admin"
                       >
-                        <Edit3 className="w-4 h-4" />
+                        <Edit3 className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <button
                         onClick={() => openAssignModal(admin)}
                         className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
                         title="Assign Properties"
                       >
-                        <Building className="w-4 h-4" />
+                        <Building className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <button
                         onClick={() => handleRemoveAdmin(admin.id)}
                         className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
                         title="Remove Admin"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                     </div>
                   </td>
@@ -387,11 +388,104 @@ const UserManagement = () => {
               ))}
             </tbody>
           </table>
+
+          {/* Mobile Card Layout */}
+          <div className="md:hidden divide-y divide-gray-200">
+            {filteredAdmins.map((admin) => (
+              <div key={admin.id} className="p-3 bg-white">
+                <div className="flex flex-col gap-2 text-md">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div className="ml-2">
+                      <div className="text-sm font-medium text-gray-900">
+                        {admin.name}
+                      </div>
+                      <div className="text-sm text-gray-500">{admin.email}</div>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Status:</span>{" "}
+                    <span
+                      className={`inline-flex px-1 py-0.5 text-xs font-semibold rounded-full ${
+                        admin.status === "Active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {admin.status}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      Assigned Properties:
+                    </span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {admin.assignedProperties
+                        .slice(0, 2)
+                        .map((property, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex px-1 py-0.5 text-xs bg-blue-100 text-blue-800 rounded"
+                          >
+                            {property}
+                          </span>
+                        ))}
+                      {admin.assignedProperties.length > 2 && (
+                        <span className="inline-flex px-1 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                          +{admin.assignedProperties.length - 2} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      Join Date:
+                    </span>{" "}
+                    {admin.joinDate}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      Last Login:
+                    </span>{" "}
+                    {admin.lastLogin}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Actions:</span>
+                    <div className="flex gap-1 mt-1">
+                      <button
+                        onClick={() => openEditModal(admin)}
+                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                        title="Edit Admin"
+                      >
+                        <Edit3 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => openAssignModal(admin)}
+                        className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
+                        title="Assign Properties"
+                      >
+                        <Building className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleRemoveAdmin(admin.id)}
+                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                        title="Remove Admin"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
         {filteredAdmins.length === 0 && (
-          <div className="text-center py-12">
-            <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">
+          <div className="text-center py-8 md:py-12">
+            <User className="w-10 h-10 md:w-12 md:h-12 text-gray-400 mx-auto mb-2 md:mb-4" />
+            <p className="text-gray-500 text-md md:text-base">
               No admins found matching your criteria.
             </p>
           </div>
@@ -462,7 +556,7 @@ const UserManagement = () => {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={handleInviteAdmin}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex-1 bg-[#1652A1] hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Send Invite
               </button>
@@ -553,7 +647,7 @@ const UserManagement = () => {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={handleEditAdmin}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex-1 bg-[#1652A1] hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Save Changes
               </button>
