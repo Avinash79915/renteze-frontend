@@ -13,6 +13,8 @@ import AdminDashboard from "./Pages/admin/AdminHome";
 import TenantDashboard from "./Pages/tenant/TenantHome";
 import SuperAdminDashboard from "./Pages/SuperAdmin/SuperAdmin";
 import Signup from "./Pages/Signup";
+import OtpVerification from "./Pages/OtpVerification";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -21,6 +23,7 @@ const AppRoutes = () => {
         <Route path="/login" element={<LoginOptions />} />
         <Route path="/login/:role" element={<LoginForm />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/otp" element={<OtpVerification />} />
       </Route>
 
       {/* Routes with sidebar/navbar */}

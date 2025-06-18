@@ -1,6 +1,50 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { users } from "./HardcodedUsers";
+import { createAsyncThunk } from "@reduxjs/toolkit";
+export const signup = createAsyncThunk(
+  "auth/signup",
+  async (formData, { rejectWithValue }) => {
+    try {
+      // Replace with your API call, e.g., axios.post("/api/signup", formData)
+      const response = await new Promise((resolve) =>
+        setTimeout(() => resolve({ data: formData }), 2000)
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Signup failed");
+    }
+  }
+);
 
+export const forgotPassword = createAsyncThunk(
+  "auth/forgotPassword",
+  async ({ email }, { rejectWithValue }) => {
+    try {
+      // Replace with your API call, e.g., axios.post("/api/forgot-password", { email })
+      const response = await new Promise((resolve) =>
+        setTimeout(() => resolve({ data: { message: "Reset link sent" } }), 2000)
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to send reset link");
+    }
+  }
+);
+// In authSlice extraReducers
+extraReducers: (builder) => {
+  builder
+    .addCase(signup.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    })
+    .addCase(signup.fulfilled, (state, action) => {
+      state.isLoading = false;
+    })
+    .addCase(signup.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload;
+    });
+};
 // Safe localStorage getter with error handling
 const getStoredUser = () => {
   try {

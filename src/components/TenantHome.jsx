@@ -1,4 +1,7 @@
 import React from "react";
+import PropertyDetails from "./TenantPropertyDetails"; 
+import property1 from "../assets/property-1.jpg";
+
 import { 
   FiUser, 
   FiMail, 
@@ -44,6 +47,23 @@ const tenant = {
   gstFile: "gst-certificate.pdf"
 };
 
+const properties = [
+  {
+    id: 1,
+    name: "Sunrise Apartments",
+    location: "Bengaluru, Karnataka",
+    image: property1,
+    area: "1200 sqft",
+    floor: "2nd Floor",
+    type: "2 BHK",
+    rent: "₹25,000",
+    maintenance: "₹1,200",
+    furnished: "Semi-furnished",
+    parking: "Available",
+  },
+];
+
+
 const TenantHome = () => {
   const InfoCard = ({ icon: Icon, title, children, className = "" }) => (
     <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-6 ${className}`}>
@@ -78,6 +98,7 @@ const TenantHome = () => {
       <FiExternalLink className="w-4 h-4" />
     </a>
   );
+const [selectedProperty, setSelectedProperty] = React.useState(null);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -257,6 +278,44 @@ const TenantHome = () => {
             </div>
           </div>
         </div>
+{/* My Property Section */}
+<div className="mt-6">
+  <InfoCard icon={FiHome} title="My Property" className="w-full">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {properties.map((property) => (
+        <div key={property.id} className="border rounded-xl overflow-hidden bg-white shadow-sm">
+          <img
+            src={property.image}
+            alt={property.name}
+            className="h-48 w-full object-cover"
+          />
+          <div className="p-4 space-y-1">
+            <h4 className="text-lg font-semibold text-slate-800">
+              {property.name}
+            </h4>
+            <p className="text-sm text-slate-600">{property.location}</p>
+            <p className="text-sm text-slate-600">Type: {property.type}</p>
+            <p className="text-sm text-slate-600">Rent: {property.rent}</p>
+            <button
+              onClick={() => setSelectedProperty(property)}
+              className="mt-3 inline-block text-sm font-medium text-blue-600 hover:underline"
+            >
+              View Details
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </InfoCard>
+</div>
+
+{/* Render Detailed View if Selected */}
+{selectedProperty && (
+  <PropertyDetails
+    property={selectedProperty}
+    onClose={() => setSelectedProperty(null)}
+  />
+)}
 
       </div>
     </div>

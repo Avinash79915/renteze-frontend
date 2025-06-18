@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Users,
   Plus,
@@ -13,18 +13,13 @@ import {
   Home,
   FileText,
   Download,
-  Upload,
   Calendar,
-  DollarSign,
   Bell,
   MessageSquare,
   Building,
-  Zap,
-  Droplets,
-  X,
-  Save,
-  AlertCircle,
 } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
+import TenantForm from "../TenantComponents/TenantForm"; // Import the new TenantForm component
 
 const TenantManagement = () => {
   const [tenants, setTenants] = useState([
@@ -35,13 +30,13 @@ const TenantManagement = () => {
       age: 32,
       fatherHusbandName: "Suresh Kumar",
       businessNature: "Software Engineer",
-      primaryPhone: "+91 98765 43210",
-      secondaryPhone: "+91 87654 32109",
+      primaryPhone: "+91 9876543210",
+      secondaryPhone: "+91 8765432109",
       email: "ravi.kumar@email.com",
       contractType: "Lease",
       duration: "11 months",
-      amount: 12000,
-      advanceAmount: 24000,
+      amount: 15000,
+      advanceAmount: 30000,
       property: "Palm Residency",
       unit: "A-101",
       status: "Active",
@@ -64,8 +59,8 @@ const TenantManagement = () => {
       age: 28,
       fatherHusbandName: "Rajesh Sharma",
       businessNature: "Marketing Manager",
-      primaryPhone: "+91 98765 43211",
-      secondaryPhone: "+91 87654 32108",
+      primaryPhone: "+91 9876543211",
+      secondaryPhone: "+91 8765432108",
       email: "anjali.sharma@email.com",
       contractType: "Rent",
       duration: "12 months",
@@ -151,7 +146,8 @@ const TenantManagement = () => {
     reason: "",
   });
 
-  const resetForm = () => {
+  // Memoize resetForm
+  const resetForm = useCallback(() => {
     setTenantForm({
       firstName: "",
       lastName: "",
@@ -190,7 +186,71 @@ const TenantManagement = () => {
         country: "India",
       },
     });
-  };
+  }, []);
+
+  // Memoize handleAddTenant
+  const handleAddTenant = useCallback(() => {
+    const newTenant = {
+      id: uuidv4(),
+      ...tenantForm,
+      status: "Active",
+      joinDate: new Date().toISOString().split("T")[0],
+    };
+    setTenants((prev) => [...prev, newTenant]);
+    resetForm();
+    setShowAddForm(false);
+  }, [tenantForm, resetForm]);
+
+  // Memoize handleEditTenant
+  const handleEditTenant = useCallback(() => {
+    setTenants((prev) =>
+      prev.map((tenant) =>
+        tenant.id === selectedTenant.id ? { ...tenant, ...tenantForm } : tenant
+      )
+    );
+    setShowEditModal(false);
+    setSelectedTenant(null);
+    resetForm();
+  }, [tenantForm, selectedTenant, resetForm]);
+
+  // Memoize openEditModal
+  const openEditModal = useCallback((tenant) => {
+    setSelectedTenant(tenant);
+    setTenantForm({ ...tenant });
+    setShowEditModal(true);
+  }, []);
+
+  // Memoize openViewModal
+  const openViewModal = useCallback((tenant) => {
+    setSelectedTenant(tenant);
+    setShowViewModal(true);
+  }, []);
+
+  // Memoize openVacationModal
+  const openVacationModal = useCallback((tenant) => {
+    setSelectedTenant(tenant);
+    setShowVacationModal(true);
+  }, []);
+
+  // Memoize handleDeleteTenant
+  const handleDeleteTenant = useCallback((tenantId) => {
+    if (window.confirm("Are you sure you want to delete this tenant?")) {
+      setTenants((prev) => prev.filter((tenant) => tenant.id !== tenantId));
+    }
+  }, []);
+
+  // Memoize handleVacationNotice
+  const handleVacationNotice = useCallback(() => {
+    console.log("Vacation notice submitted:", vacationForm);
+    setShowVacationModal(false);
+    setVacationForm({ noticeDate: "", vacationDate: "", reason: "" });
+  }, [vacationForm]);
+
+  // Memoize generateContract
+  const generateContract = useCallback((tenant) => {
+    console.log("Generating contract for:", tenant);
+    alert("Contract draft generated successfully!");
+  }, []);
 
   const filteredTenants = tenants.filter((tenant) => {
     const matchesSearch =
@@ -202,62 +262,6 @@ const TenantManagement = () => {
       filterStatus === "All" || tenant.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
-
-  const handleAddTenant = () => {
-    const newTenant = {
-      id: Date.now().toString(),
-      ...tenantForm,
-      status: "Active",
-      joinDate: new Date().toISOString().split("T")[0],
-    };
-    setTenants([...tenants, newTenant]);
-    resetForm();
-    setShowAddForm(false);
-  };
-
-  const handleEditTenant = () => {
-    setTenants(
-      tenants.map((tenant) =>
-        tenant.id === selectedTenant.id ? { ...tenant, ...tenantForm } : tenant
-      )
-    );
-    setShowEditModal(false);
-    setSelectedTenant(null);
-    resetForm();
-  };
-
-  const handleDeleteTenant = (tenantId) => {
-    if (window.confirm("Are you sure you want to delete this tenant?")) {
-      setTenants(tenants.filter((tenant) => tenant.id !== tenantId));
-    }
-  };
-
-  const openEditModal = (tenant) => {
-    setSelectedTenant(tenant);
-    setTenantForm({ ...tenant });
-    setShowEditModal(true);
-  };
-
-  const openViewModal = (tenant) => {
-    setSelectedTenant(tenant);
-    setShowViewModal(true);
-  };
-
-  const openVacationModal = (tenant) => {
-    setSelectedTenant(tenant);
-    setShowVacationModal(true);
-  };
-
-  const handleVacationNotice = () => {
-    console.log("Vacation notice submitted:", vacationForm);
-    setShowVacationModal(false);
-    setVacationForm({ noticeDate: "", vacationDate: "", reason: "" });
-  };
-
-  const generateContract = (tenant) => {
-    console.log("Generating contract for:", tenant);
-    alert("Contract draft generated successfully!");
-  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -271,760 +275,6 @@ const TenantManagement = () => {
         return "bg-gray-100 text-gray-800";
     }
   };
-
-  const TenantForm = ({ isEdit = false }) => (
-    <div className="bg-white rounded-lg border border-gray-200 mb-6">
-      <div className="p-1 md:p-6 border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <h3 className="text-xl font-semibold text-[#1652A1]">
-            {isEdit ? "Edit Tenant" : "Add New Tenant"}
-          </h3>
-          <button
-            onClick={() => {
-              isEdit ? setShowEditModal(false) : setShowAddForm(false);
-              resetForm();
-            }}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap sm:flex-nowrap space-x-0 sm:space-x-1 gap-2 sm:gap-0 mt-4 bg-gray-100 p-2 sm:p-1 rounded-lg overflow-x-auto">
-          {[
-            { id: "basic", label: "Basic Info", icon: User },
-            { id: "contact", label: "Contact", icon: Phone },
-            { id: "property", label: "Property", icon: Home },
-            { id: "utilities", label: "Utilities", icon: Zap },
-            { id: "documents", label: "Documents", icon: FileText },
-            { id: "financial", label: "Financial", icon: DollarSign },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? "bg-white text-[#1652A1] shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="p-1 md:p-6">
-        {/* Basic Info Tab */}
-        {activeTab === "basic" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name *
-                </label>
-                <input
-                  type="text"
-                  value={tenantForm.firstName}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, firstName: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name *
-                </label>
-                <input
-                  type="text"
-                  value={tenantForm.lastName}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, lastName: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Age
-                </label>
-                <input
-                  type="number"
-                  value={tenantForm.age}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, age: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Father/Husband's Name
-                </label>
-                <input
-                  type="text"
-                  value={tenantForm.fatherHusbandName}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      fatherHusbandName: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nature of Business
-                </label>
-                <input
-                  type="text"
-                  value={tenantForm.businessNature}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      businessNature: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-lg font-medium text-gray-900 mb-3">
-                Permanent Address
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Door No
-                  </label>
-                  <input
-                    type="text"
-                    value={tenantForm.address.doorNo}
-                    onChange={(e) =>
-                      setTenantForm({
-                        ...tenantForm,
-                        address: {
-                          ...tenantForm.address,
-                          doorNo: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Street
-                  </label>
-                  <input
-                    type="text"
-                    value={tenantForm.address.street}
-                    onChange={(e) =>
-                      setTenantForm({
-                        ...tenantForm,
-                        address: {
-                          ...tenantForm.address,
-                          street: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    value={tenantForm.address.city}
-                    onChange={(e) =>
-                      setTenantForm({
-                        ...tenantForm,
-                        address: {
-                          ...tenantForm.address,
-                          city: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    value={tenantForm.address.state}
-                    onChange={(e) =>
-                      setTenantForm({
-                        ...tenantForm,
-                        address: {
-                          ...tenantForm.address,
-                          state: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    value={tenantForm.address.country}
-                    onChange={(e) =>
-                      setTenantForm({
-                        ...tenantForm,
-                        address: {
-                          ...tenantForm.address,
-                          country: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Contact Tab */}
-        {activeTab === "contact" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Primary Phone *
-                </label>
-                <input
-                  type="tel"
-                  value={tenantForm.primaryPhone}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      primaryPhone: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Secondary Phone
-                </label>
-                <input
-                  type="tel"
-                  value={tenantForm.secondaryPhone}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      secondaryPhone: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  value={tenantForm.email}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, email: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Property Tab */}
-        {activeTab === "property" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Property *
-                </label>
-                <select
-                  value={tenantForm.property}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, property: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  required
-                >
-                  <option value="">Select Property</option>
-                  {properties.map((property) => (
-                    <option key={property} value={property}>
-                      {property}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Unit
-                </label>
-                <input
-                  type="text"
-                  value={tenantForm.unit}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, unit: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  placeholder="e.g., A-101"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contract Type
-                </label>
-                <select
-                  value={tenantForm.contractType}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      contractType: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                >
-                  <option value="Lease">Lease</option>
-                  <option value="Rent">Rent</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Duration
-                </label>
-                <input
-                  type="text"
-                  value={tenantForm.duration}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, duration: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  placeholder="e.g., 11 months"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Monthly Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  value={tenantForm.amount}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, amount: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Advance Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  value={tenantForm.advanceAmount}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      advanceAmount: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fixtures and Amenities
-                </label>
-                <textarea
-                  value={tenantForm.fixtures}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, fixtures: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  rows="3"
-                  placeholder="List of fixtures and amenities included"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Utilities Tab */}
-        {activeTab === "utilities" && (
-          <div className="space-y-6">
-            {/* Water Section */}
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <Droplets className="w-5 h-5 text-blue-500" />
-                Water
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Water Type
-                  </label>
-                  <select
-                    value={tenantForm.waterType}
-                    onChange={(e) =>
-                      setTenantForm({
-                        ...tenantForm,
-                        waterType: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  >
-                    <option value="Individual">Individual</option>
-                    <option value="Common">Common</option>
-                  </select>
-                </div>
-                {tenantForm.waterType === "Individual" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Water Meter Number
-                    </label>
-                    <input
-                      type="text"
-                      value={tenantForm.waterMeterNo}
-                      onChange={(e) =>
-                        setTenantForm({
-                          ...tenantForm,
-                          waterMeterNo: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                  </div>
-                )}
-                {tenantForm.waterType === "Common" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Water Charges (₹)
-                    </label>
-                    <input
-                      type="number"
-                      value={tenantForm.waterCharges}
-                      onChange={(e) =>
-                        setTenantForm({
-                          ...tenantForm,
-                          waterCharges: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Power Section */}
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-yellow-500" />
-                Power
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Power Type
-                  </label>
-                  <select
-                    value={tenantForm.powerType}
-                    onChange={(e) =>
-                      setTenantForm({
-                        ...tenantForm,
-                        powerType: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  >
-                    <option value="Individual">Individual Meter</option>
-                    <option value="Common">Common (Fixed)</option>
-                  </select>
-                </div>
-                {tenantForm.powerType === "Individual" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Electric Meter Number
-                    </label>
-                    <input
-                      type="text"
-                      value={tenantForm.powerMeterNo}
-                      onChange={(e) =>
-                        setTenantForm({
-                          ...tenantForm,
-                          powerMeterNo: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                  </div>
-                )}
-                {tenantForm.powerType === "Common" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Fixed Charges (₹)
-                    </label>
-                    <input
-                      type="number"
-                      value={tenantForm.powerCharges}
-                      onChange={(e) =>
-                        setTenantForm({
-                          ...tenantForm,
-                          powerCharges: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Documents Tab */}
-        {activeTab === "documents" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Identification Proof
-                </label>
-                <select
-                  value={tenantForm.idProofType}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      idProofType: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                >
-                  <option value="Aadhar">Aadhar Card</option>
-                  <option value="License">Driving License</option>
-                  <option value="Voters">Voter ID</option>
-                  <option value="Passport">Passport</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload ID Proof
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    className="hidden"
-                    id="idProofUpload"
-                    onChange={(e) =>
-                      console.log("ID Proof uploaded:", e.target.files[0])
-                    }
-                  />
-                  <label
-                    htmlFor="idProofUpload"
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                  >
-                    <Upload className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-600">Upload File</span>
-                  </label>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  GST Number
-                </label>
-                <input
-                  type="text"
-                  value={tenantForm.gstNo}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, gstNo: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  placeholder="Enter GST Number"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  GST Bill Required
-                </label>
-                <select
-                  value={tenantForm.gstRequired}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      gstRequired: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                >
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  PAN Number
-                </label>
-                <input
-                  type="text"
-                  value={tenantForm.panNo}
-                  onChange={(e) =>
-                    setTenantForm({ ...tenantForm, panNo: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  placeholder="Enter PAN Number"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload PAN Copy
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    className="hidden"
-                    id="panUpload"
-                    onChange={(e) =>
-                      console.log("PAN uploaded:", e.target.files[0])
-                    }
-                  />
-                  <label
-                    htmlFor="panUpload"
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                  >
-                    <Upload className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-600">Upload File</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Financial Tab */}
-        {activeTab === "financial" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Late Fee Per Day (₹)
-                </label>
-                <input
-                  type="number"
-                  value={tenantForm.lateFeePerDay}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      lateFeePerDay: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Payment Mode
-                </label>
-                <select
-                  value={tenantForm.paymentMode}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      paymentMode: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                >
-                  <option value="Cash">Cash</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
-                  <option value="Cheque">Cheque</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Maintenance Charges (₹)
-                </label>
-                <input
-                  type="number"
-                  value={tenantForm.maintenanceCharges}
-                  onChange={(e) =>
-                    setTenantForm({
-                      ...tenantForm,
-                      maintenanceCharges: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
-              </label>
-              <textarea
-                value={tenantForm.notes}
-                onChange={(e) =>
-                  setTenantForm({ ...tenantForm, notes: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                rows="3"
-                placeholder="Additional notes about the tenant"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="p-6 border-t border-gray-200">
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => {
-              isEdit ? setShowEditModal(false) : setShowAddForm(false);
-              resetForm();
-            }}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={isEdit ? handleEditTenant : handleAddTenant}
-            className="px-4 py-2 bg-[#1652A1] text-white rounded-lg hover:bg-[#134a8e] flex items-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {isEdit ? "Save Changes" : "Add Tenant"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 
   const ViewTenantModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1211,7 +461,10 @@ const TenantManagement = () => {
               type="date"
               value={vacationForm.noticeDate}
               onChange={(e) =>
-                setVacationForm({ ...vacationForm, noticeDate: e.target.value })
+                setVacationForm((prev) => ({
+                  ...prev,
+                  noticeDate: e.target.value,
+                }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
               required
@@ -1225,10 +478,10 @@ const TenantManagement = () => {
               type="date"
               value={vacationForm.vacationDate}
               onChange={(e) =>
-                setVacationForm({
-                  ...vacationForm,
+                setVacationForm((prev) => ({
+                  ...prev,
                   vacationDate: e.target.value,
-                })
+                }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
               required
@@ -1241,7 +494,10 @@ const TenantManagement = () => {
             <textarea
               value={vacationForm.reason}
               onChange={(e) =>
-                setVacationForm({ ...vacationForm, reason: e.target.value })
+                setVacationForm((prev) => ({
+                  ...prev,
+                  reason: e.target.value,
+                }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
               rows="3"
@@ -1272,7 +528,7 @@ const TenantManagement = () => {
   );
 
   return (
-    <div className="p-0 md:p-6 ">
+    <div className="p-0 md:p-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
         <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
           Tenant Management
@@ -1313,12 +569,24 @@ const TenantManagement = () => {
         </div>
       </div>
 
-      {/* Add Tenant Form (Inline) */}
-      {showAddForm && <TenantForm />}
+      {/* Add Tenant Form */}
+      {showAddForm && (
+        <TenantForm
+          isEdit={false}
+          tenantForm={tenantForm}
+          setTenantForm={setTenantForm}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          resetForm={resetForm}
+          properties={properties}
+          handleAddTenant={handleAddTenant}
+          setShowAddForm={setShowAddForm}
+        />
+      )}
 
       {/* Tenant Table */}
       <div className="overflow-x-auto w-full">
-        <table className="w-full border-collapse text-xs md:text-sm hidden md:table">
+        <table className="w-full border-collapse text-md md:text-md hidden md:table">
           <thead>
             <tr className="bg-gray-100 text-left">
               <th className="p-2 md:p-3 border-b border-gray-200">
@@ -1419,7 +687,7 @@ const TenantManagement = () => {
         {/* Mobile Card Layout */}
         <div className="md:hidden divide-y divide-gray-200">
           {filteredTenants.length === 0 ? (
-            <div className="p-2 text-center text-gray-500 text-xs">
+            <div className="p-2 text-center text-gray-500 text-md">
               No tenants found.
             </div>
           ) : (
@@ -1509,8 +777,22 @@ const TenantManagement = () => {
         </div>
       </div>
 
-      {/* Modals */}
-      {showEditModal && <TenantForm isEdit />}
+      {/* Edit Tenant Modal */}
+      {showEditModal && (
+        <TenantForm
+          isEdit={true}
+          tenantForm={tenantForm}
+          setTenantForm={setTenantForm}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          resetForm={resetForm}
+          properties={properties}
+          handleEditTenant={handleEditTenant}
+          setShowEditModal={setShowEditModal}
+        />
+      )}
+
+      {/* Other Modals */}
       {showViewModal && <ViewTenantModal />}
       {showVacationModal && <VacationNoticeModal />}
     </div>

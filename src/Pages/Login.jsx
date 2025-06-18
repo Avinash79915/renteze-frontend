@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../features/auth/authSlice";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import SignUp from "./Signup";
 import ForgotPassword from "./ForgotPassword";
 import OtpVerification from "./OtpVerification";
 import logo from "../assets/white-logo.svg";
 
 function Login() {
   const [formData, setFormData] = useState({ username: "", password: "" });
-  const [currentView, setCurrentView] = useState("login"); // login, signup, forgot, otp
+  const [currentView, setCurrentView] = useState("login"); // login, forgot, otp
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { role } = useParams(); // Get role from URL (e.g., admin, tenant)
   const { user, error } = useSelector((state) => state.auth);
 
   const handleChange = (e) => {
@@ -25,10 +25,9 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      await dispatch(login(formData));
-      // Move to OTP verification after successful login attempt
+      await dispatch(login({ ...formData, role })).unwrap();
       setCurrentView("otp");
     } catch (err) {
       console.error("Login error:", err);
@@ -61,13 +60,11 @@ function Login() {
 
   const renderCurrentView = () => {
     switch (currentView) {
-      case "signup":
-        return <SignUp onBackToLogin={() => setCurrentView("login")} />;
       case "forgot":
         return <ForgotPassword onBackToLogin={() => setCurrentView("login")} />;
       case "otp":
         return (
-          <OtpVerification 
+          <OtpVerification
             onBackToLogin={() => setCurrentView("login")}
             username={formData.username}
           />
@@ -78,7 +75,8 @@ function Login() {
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-                <p className="text-blue-100">Sign in to your account</p>
+               {/* <p className="text-blue-100">Log in to your {role || "account"}</p> */}
+                 <p className="text-blue-100">Log in to your Account</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -172,7 +170,7 @@ function Login() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Signing in...
+                      log in...
                     </div>
                   ) : (
                     "Log in"
@@ -184,7 +182,7 @@ function Login() {
                 <p className="text-white/70">
                   Don't have an account?{" "}
                   <button
-                    onClick={() => setCurrentView("signup")}
+                    onClick={() => navigate("/signup")}
                     className="text-blue-300 hover:text-blue-200 font-medium transition-colors duration-200"
                   >
                     Sign up
@@ -199,19 +197,15 @@ function Login() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
-      
-      
       <div className="relative z-10 w-full max-w-6xl flex items-center justify-center">
         <div className="hidden lg:flex lg:w-1/2 flex-col justify-center p-12">
-        
           <div className="text-white">
-          <img src={logo} className="h-20  mb-5 items-center justify-center" alt="logo" />
+            <img src={logo} className="h-20 mb-5" alt="logo" />
             <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
               Welcome Back!
             </h1>
             <p className="text-xl text-blue-100 leading-relaxed mb-8">
-              Access your dashboard and manage your account with ease. Our secure platform 
-              ensures your data is protected while providing you with the best user experience.
+              Access your {role || "account"} dashboard and manage your account with ease. Our secure platform ensures your data is protected while providing you with the best user experience.
             </p>
             <div className="flex space-x-4">
               <div className="flex items-center text-blue-200">
@@ -229,7 +223,7 @@ function Login() {
             </div>
           </div>
         </div>
-        
+
         <div className="w-full lg:w-1/2 flex justify-center">
           {renderCurrentView()}
         </div>
