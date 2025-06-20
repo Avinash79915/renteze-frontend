@@ -2,87 +2,89 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/auth/authSlice";
+import { setQuery } from "../features/filter/filterSlice";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { FiSearch, FiSettings, FiLogOut, FiEdit } from "react-icons/fi";
-import { FiLogIn, FiUserPlus } from "react-icons/fi";
+import {
+  FiSearch, FiSettings, FiLogOut, FiEdit,
+  FiLogIn, FiUserPlus, FiBell, FiClock
+} from "react-icons/fi";
+import { MdOutlineMessage } from "react-icons/md";
 
 import demo from "../assets/Avatar.svg";
 
-const Navbar = ({ activeSection, setActiveSection, role }) => {
+const Navbar = ({ activeSection, setActiveSection }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { query } = useSelector((state) => state.filter);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const notificationRef = useRef(null);
+
+  // Sample recent activities data
+  const recentActivities = [
+     {
+      icon: MdOutlineMessage ,
+      message: "Pipe leaking",
+      time: "2 hours ago",
+      color: "text-blue-500",
+    },
+    {
+      icon: FiBell,
+      message: "New property listed in your area",
+      time: "2 hours ago",
+      color: "text-blue-500",
+    },
+    {
+      icon: FiEdit,
+      message: "Your profile was updated",
+      time: "Yesterday",
+      color: "text-green-500",
+    },
+    {
+      icon: FiLogIn,
+      message: "New login detected",
+      time: "2 days ago",
+      color: "text-yellow-500",
+    },
+  ];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setNotificationOpen(false);
+      }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      setDropdownOpen(false);
+  const handleLogout = () => {
+    setDropdownOpen(false);
+    dispatch(logout());
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("token");
+    localStorage.removeItem("authToken");
+    toast.success("Logged out successfully!");
+    navigate("/", { replace: true });
+  };
 
-      dispatch(logout());
-
-      localStorage.removeItem("userRole");
-      localStorage.removeItem("token");
-      localStorage.removeItem("authToken");
-
-      toast.success("Logged out successfully!", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-
-      // Navigate to home page
-      navigate("/", { replace: true });
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Error logging out. Please try again.");
-    }
+  const handleSearchChange = (e) => {
+    dispatch(setQuery(e.target.value));
   };
 
   const handleImageError = (e) => {
     e.target.src = demo;
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      console.log("Searching for:", searchQuery);
-    }
-  };
-
-  const handleEditProfile = () => {
-    setDropdownOpen(false);
-    navigate("/profile/edit");
-    // toast.info("Edit Profile clicked");
-  };
-
-  const handleSettings = () => {
-    setDropdownOpen(false);
-    navigate("/settings");
-    // toast.info("Settings clicked");
-  };
-
   return (
     <nav className="bg-white shadow-md md:px-6 px-3 py-3 flex justify-between items-center sticky top-0 z-40 pl-16 md:pl-6">
-      {/* Left side - Logo */}
+      {/* Logo */}
       <Link
         onClick={() => setActiveSection && setActiveSection("dashboard")}
         className="text-2xl font-light text-[#004C86] hover:text-blue-700 transition-colors"
@@ -91,90 +93,167 @@ const Navbar = ({ activeSection, setActiveSection, role }) => {
       </Link>
 
       {/* Right Side */}
-      <div className="flex items-center space-x-4 relative">
+      <div className="flex items-center space-x-5 relative">
         {/* Search Bar */}
         <form
-          onSubmit={handleSearch}
+          onSubmit={(e) => e.preventDefault()}
           className="hidden sm:flex items-center bg-gray-100 px-5 py-1 rounded-full hover:bg-gray-200 transition-colors"
         >
           <FiSearch className="text-gray-500 mr-2" />
           <input
             type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search properties..."
+            value={query}
+            onChange={handleSearchChange}
             className="bg-transparent outline-none text-gray-700 w-40 sm:w-60 placeholder-gray-500"
           />
         </form>
 
         {isAuthenticated ? (
-          <div className="flex items-center space-x-4" ref={dropdownRef}>
-            {/* Profile Image */}
-            <img
-              src={user?.profilePicture || demo}
-              alt="Profile"
-              className="w-8 h-8 rounded-full object-cover border-2 border-transparent hover:border-blue-300 transition-colors cursor-pointer"
-              onError={handleImageError}
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            />
+          <div className="flex items-center ">
 
-            {/* Username */}
-            <span className="text-gray-700 font-medium hidden sm:inline">
-              {user?.username || user?.name || "User"}
-            </span>
+          {/* Profile Dropdown */}
+            <div className="flex items-center space-x-4" ref={dropdownRef}>
+              {/* Profile Image */}
+              <img
+                src={user?.profilePicture || demo}
+                alt="Profile"
+                className="w-8 h-8 rounded-full object-cover border-2 border-transparent hover:border-blue-300 transition-colors cursor-pointer"
+                
+              />
 
-            {/* Settings Icon */}
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className={`text-gray-600 hover:text-gray-800 relative z-30 transition-all duration-300 p-2 rounded-full hover:bg-gray-100`}
-              aria-label="Settings menu"
-            >
-              <FiSettings size={22} />
-            </button>
+              {/* Username */}
+              <span className="text-gray-700 font-medium hidden sm:inline">
+                {user?.username || user?.name || "User"}
+              </span>
 
-            {/* Dropdown Menu - Always in DOM */}
-            <div
-              className={`absolute right-0 top-12 w-48 bg-white border shadow-lg rounded-lg z-50 py-1 transition-all duration-200 transform origin-top-right ${
-                dropdownOpen
-                  ? "scale-100 opacity-100 pointer-events-auto"
-                  : "scale-95 opacity-0 pointer-events-none"
-              }`}
-            >
-              <div className="px-4 py-2 border-b border-gray-100">
-                <p className="text-sm font-medium text-gray-900">
-                  {user?.username || user?.name || "User"}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {user?.email || "user@example.com"}
-                </p>
+              {/* Settings Icon */}
+              <button
+                onClick={() => {
+                  setDropdownOpen(!dropdownOpen);
+                  setNotificationOpen(false); // Close notification dropdown when opening profile
+                }}
+                className="text-gray-600 hover:text-gray-800  rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Settings menu"
+              >
+                <FiSettings size={22} />
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              <div
+                className={`absolute right-0 top-12 w-48 bg-white border border-gray-300 shadow-lg rounded-lg z-50 py-1 transition-all duration-200 transform origin-top-right ${
+                  dropdownOpen
+                    ? "scale-100 opacity-100 pointer-events-auto"
+                    : "scale-95 opacity-0 pointer-events-none"
+                }`}
+              >
+                <div className="px-2 py-2 border-b border-gray-100">
+                  <p className="text-xl font-semibold text-[#1652A1]">
+                    {user?.username || user?.name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {user?.email || "user@example.com"}
+                  </p>
+                </div>
+
+                <button
+                  className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    navigate("/profile/edit");
+                  }}
+                >
+                  <FiEdit className="mr-3" size={16} />
+                  Edit Profile
+                </button>
+
+                <button
+                  className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    navigate("/settings");
+                  }}
+                >
+                  <FiSettings className="mr-3" size={16} />
+                  Settings
+                </button>
+
+
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                >
+                  <FiLogOut className="mr-3" size={16} />
+                  Logout
+                </button>
               </div>
-
-              <button
-                className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                onClick={handleEditProfile}
-              >
-                <FiEdit className="mr-3 text-gray-500" size={16} />
-                Edit Profile
-              </button>
-
-              <button
-                className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                onClick={handleSettings}
-              >
-                <FiSettings className="mr-3 text-gray-500" size={16} />
-                Settings
-              </button>
-
-              <hr className="my-1" />
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <FiLogOut className="mr-3" size={16} />
-                Logout
-              </button>
             </div>
+
+                          {/* notification Dropdown Menu */}
+
+            <div className="relative" ref={notificationRef}>
+              <button
+                onClick={() => {
+                  setNotificationOpen(!notificationOpen);
+                  setDropdownOpen(false); 
+                }}
+                className="relative text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <FiBell size={20} />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+
+              <div
+                className={`absolute right-0 top-12 w-80 bg-white border border-gray-300 shadow-lg rounded-xl z-50 py-1 transition-all duration-200 transform origin-top-right ${
+                  notificationOpen
+                    ? "scale-100 opacity-100 pointer-events-auto"
+                    : "scale-95 opacity-0 pointer-events-none"
+                }`}
+              >
+                <div className="bg-white p-2 rounded-xl ">
+                  <h2 className="text-xl font-semibold text-[#1652A1] mb-3">
+                    Recent Activities
+                  </h2>
+                  <div className="space-y-4">
+                    {recentActivities.map((activity, index) => {
+                      const Icon = activity.icon;
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-start gap-1 p-1 hover:bg-gray-50 rounded-lg transition-colors"
+                        >
+                          <div
+                            className={`p-2 rounded-full bg-gray-100 ${activity.color}`}
+                          >
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-900 mb-1">
+                              {activity.message}
+                            </p>
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <FiClock className="w-3 h-3" />
+                              {activity.time}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    className="w-full mt-4 text-center text-[#1652A1] hover:text-[#143d7a] text-sm font-medium py-2 border-t border-gray-100"
+                    onClick={() => {
+                      setNotificationOpen(false);
+                      navigate("/notifications");
+                    }}
+                  >
+                    View All Activities
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            
           </div>
         ) : (
           <div className="flex items-center space-x-3">

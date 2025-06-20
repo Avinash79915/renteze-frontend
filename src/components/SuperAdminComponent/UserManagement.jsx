@@ -233,44 +233,44 @@ const UserManagement = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Admins</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-black">
                 {admins.length}
               </p>
             </div>
-            <User className="w-8 h-8 text-blue-500" />
+            <User className="w-8 h-8 text-[#1652A1]" />
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active Admins</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-black">
                 {admins.filter((a) => a.status === "Active").length}
               </p>
             </div>
-            <UserCheck className="w-8 h-8 text-green-500" />
+            <UserCheck className="w-8 h-8 text-[#1652A1]" />
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Inactive Admins</p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold text-black">
                 {admins.filter((a) => a.status === "Inactive").length}
               </p>
             </div>
-            <UserX className="w-8 h-8 text-red-500" />
+            <UserX className="w-8 h-8 text-[#1652A1]" />
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Properties</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-black">
                 {properties.length}
               </p>
             </div>
-            <Building className="w-8 h-8 text-purple-500" />
+            <Building className="w-8 h-8 text-[#1652A1]" />
           </div>
         </div>
       </div>
@@ -363,21 +363,21 @@ const UserManagement = () => {
                     <div className="flex gap-1 md:gap-2">
                       <button
                         onClick={() => openEditModal(admin)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                        className="text-[#1652A1] hover:text-blue-900 p-1 rounded hover:bg-blue-50"
                         title="Edit Admin"
                       >
                         <Edit3 className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <button
                         onClick={() => openAssignModal(admin)}
-                        className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
+                        className="text-[#1652A1] hover:text-green-900 p-1 rounded hover:bg-green-50"
                         title="Assign Properties"
                       >
                         <Building className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <button
                         onClick={() => handleRemoveAdmin(admin.id)}
-                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                        className="text-[#1652A1] hover:text-red-900 p-1 rounded hover:bg-red-50"
                         title="Remove Admin"
                       >
                         <Trash2 className="w-3 h-3 md:w-4 md:h-4" />

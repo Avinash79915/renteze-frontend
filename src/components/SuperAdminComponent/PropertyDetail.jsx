@@ -90,11 +90,11 @@ const PropertyDetail = ({ property }) => {
         {/* Total Units */}
         <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 bg-blue-100 rounded-lg">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-[#1652A1]" />
+            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
             </div>
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
                 {property.units.length}
               </p>
               <p className="text-sm sm:text-base text-gray-600">Total Units</p>
@@ -105,11 +105,11 @@ const PropertyDetail = ({ property }) => {
         {/* Occupied Units */}
         <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 bg-green-100 rounded-lg">
-              <User className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+              <User className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
             </div>
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
                 {
                   property.units.filter(
                     (unit) => unit.occupancyStatus === "Occupied"
@@ -124,11 +124,11 @@ const PropertyDetail = ({ property }) => {
         {/* Vacant Units */}
         <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 bg-red-100 rounded-lg">
-              <Home className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+              <Home className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
             </div>
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
                 {
                   property.units.filter(
                     (unit) => unit.occupancyStatus === "Vacant"
@@ -543,7 +543,7 @@ const PropertyDetail = ({ property }) => {
 
       {/* Add Tenant Modal */}
       {showAddTenantModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">

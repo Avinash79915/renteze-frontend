@@ -643,35 +643,35 @@ const TenantManagement = () => {
                     <div className="flex gap-1 md:gap-2">
                       <button
                         onClick={() => openViewModal(tenant)}
-                        className="p-1 md:p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                        className="p-1 md:p-2 text-black hover:bg-gray-100 rounded-lg"
                         title="View Details"
                       >
                         <Eye className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <button
                         onClick={() => openEditModal(tenant)}
-                        className="p-1 md:p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                        className="p-1 md:p-2 text-black hover:bg-blue-50 rounded-lg"
                         title="Edit Tenant"
                       >
                         <Edit3 className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteTenant(tenant.id)}
-                        className="p-1 md:p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        className="p-1 md:p-2 text-black hover:bg-red-50 rounded-lg"
                         title="Delete Tenant"
                       >
                         <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <button
                         onClick={() => generateContract(tenant)}
-                        className="p-1 md:p-2 text-green-600 hover:bg-green-50 rounded-lg"
+                        className="p-1 md:p-2 text-black hover:bg-green-50 rounded-lg"
                         title="Generate Contract"
                       >
                         <FileText className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                       <button
                         onClick={() => openVacationModal(tenant)}
-                        className="p-1 md:p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg"
+                        className="p-1 md:p-2 text-black hover:bg-yellow-50 rounded-lg"
                         title="Vacation Notice"
                       >
                         <Bell className="w-3 h-3 md:w-4 md:h-4" />

@@ -9,6 +9,7 @@ import {
   Droplets,
   Trash2,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const PropertyForm = ({ setShowAddForm, setProperties }) => {
   const [activeTab, setActiveTab] = useState("basic");
@@ -66,29 +67,59 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
   };
 
   const handleAddProperty = () => {
-    const newProperty = {
-      id: Date.now().toString(),
-      ...propertyForm,
-      units,
-    };
-    setProperties((prev) => [...prev, newProperty]);
-    resetPropertyForm();
-    setShowAddForm(false);
+  const { name, propertyNo, address, unitForm, locationPin } = propertyForm;
+
+  if (!name.trim() || !propertyNo.trim() || !address.trim() || !locationPin.trim()  ) {
+    alert("Please fill all required fields");
+    return;
+  }
+
+  const newProperty = {
+    id: Date.now().toString(),
+    ...propertyForm,
+    units,
   };
 
-  const handleAddUnit = () => {
-    setUnits([...units, { id: Date.now().toString(), ...unitForm }]);
-    setUnitForm({
-      unitNumber: "",
-      area: "",
-      floorNumber: "",
-      unitType: "Apartment",
-      waterMeterNo: "",
-      electricMeterNo: "",
-      amenities: "",
-      occupancyStatus: "Vacant",
-    });
-  };
+  setProperties((prev) => [...prev, newProperty]);
+  resetPropertyForm();
+  setShowAddForm(false);
+};
+
+const handleAddUnit = () => {
+  const { unitNumber } = unitForm;
+
+  if (!unitNumber.trim()) {
+    alert("Unit Number is required to add a unit.");
+    return;
+  }
+
+  setUnits([...units, { id: Date.now().toString(), ...unitForm }]);
+  setUnitForm({
+    unitNumber: "",
+    area: "",
+    floorNumber: "",
+    unitType: "Apartment",
+    waterMeterNo: "",
+    electricMeterNo: "",
+    amenities: "",
+    occupancyStatus: "Vacant",
+  });
+};
+
+
+  // const handleAddUnit = () => {
+  //   setUnits([...units, { id: Date.now().toString(), ...unitForm }]);
+  //   setUnitForm({
+  //     unitNumber: "",
+  //     area: "",
+  //     floorNumber: "",
+  //     unitType: "Apartment",
+  //     waterMeterNo: "",
+  //     electricMeterNo: "",
+  //     amenities: "",
+  //     occupancyStatus: "Vacant",
+  //   });
+  // };
 
   const handleDeleteUnit = (unitId) => {
     setUnits(units.filter((unit) => unit.id !== unitId));
@@ -159,6 +190,7 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                   required
                   autoFocus
                 />
+                
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -196,7 +228,7 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Property Location Pin
+                  Property Location Pin *
                 </label>
                 <input
                   type="text"
@@ -207,6 +239,7 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
                       locationPin: e.target.value,
                     }))
                   }
+                  required
                   placeholder="Enter location pin"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                 />

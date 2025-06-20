@@ -1,32 +1,59 @@
-import React, { useState } from "react";
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Plus, Search, Home, ArrowLeft } from "lucide-react";
+import axios from "axios";
 
-import { Plus, Search, Home } from "lucide-react";
 import PropertyCard from "./AdminPropertyCard";
 import PropertyForm from "./PropertyForm";
 import PropertyDetail from "./PropertyDetail";
-import { ArrowLeft } from "lucide-react";
-import initialProperties from "./initialProperties";
 
 const PropertyListing = () => {
-  const [properties, setProperties] = useState(initialProperties);
+  const [properties, setProperties] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeProperty, setActiveProperty] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const filteredProperties = properties.filter(
-    (property) =>
-      property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      property.address.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const user = JSON.parse(localStorage.getItem("user"));
+const email = user?.email;
 
-  const handleDeleteProperty = (propertyId) => {
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3000/dashboard?testEmail=${email}`);
+        console.log("API Response:", response.data);
+
+        setProperties(response.data.properties || []);
+
+        
+      } catch (error) {
+        console.error("Error fetching properties:", error);
+        setProperties([]); 
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, []);
+
+  const filteredProperties = Array.isArray(properties)
+    ? properties.filter(
+        (property) =>
+          property.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          property.address?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
+
+  const handleDeleteProperty = async (propertyId) => {
     if (window.confirm("Are you sure you want to delete this property?")) {
-      setProperties(
-        properties.filter((property) => property.id !== propertyId)
-      );
-      if (activeProperty && activeProperty.id === propertyId) {
-        setActiveProperty(null);
+      try {
+        await axios.delete(`http://localhost:3000/properties/${propertyId}`);
+        setProperties((prev) => prev.filter((property) => property.id !== propertyId));
+        if (activeProperty?.id === propertyId) {
+          setActiveProperty(null);
+        }
+      } catch (error) {
+        console.error("Failed to delete property:", error);
       }
     }
   };
@@ -93,7 +120,11 @@ const PropertyListing = () => {
       ) : (
         // Property Cards Grid
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProperties.length === 0 ? (
+          {loading ? (
+            <div className="col-span-full text-center text-gray-500 py-12">
+              <p className="text-lg">Loading properties...</p>
+            </div>
+          ) : filteredProperties.length === 0 ? (
             <div className="col-span-full text-center text-gray-500 py-12">
               <Home className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <p className="text-lg">No properties found.</p>

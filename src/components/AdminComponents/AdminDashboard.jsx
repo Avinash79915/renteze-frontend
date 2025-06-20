@@ -1,270 +1,103 @@
-// import React from "react";
-// import property1 from "../../assets/property-1.jpg";
-
-// const AdminDashboard = ({ setActiveSection }) => {
-//   const stats = [
-//     { label: "Total Properties", value: 12 },
-//     { label: "Total Tenants", value: 35 },
-//     { label: "Pending Payments", value: 5 },
-//     { label: "Maintenance Requests", value: 3 },
-//   ];
-
-//   const properties = [
-//     {
-//       id: 1,
-//       name: "Palm Residency",
-//       image: property1,
-//     },
-//     {
-//       id: 2,
-//       name: "Sky View Flats",
-//       image: property1,
-//     },
-//     {
-//       id: 3,
-//       name: "Green Villas",
-//       image: property1,
-//     },
-//     {
-//       id: 4,
-//       name: "Ocean Heights",
-//       image: property1,
-//     },
-//   ];
-
-//   const recentTenants = [
-//     { name: "Ravi Kumar", property: "Palm Residency", joined: "2024-04-21" },
-//     { name: "Anjali Sharma", property: "Sky View Flats", joined: "2024-04-18" },
-//     { name: "Rahul Mehta", property: "Green Villas", joined: "2024-04-10" },
-//   ];
-
-//   return (
-//     <div className="space-y-10">
-//       <h1 className="text-2xl font-semibold text-[#1652A1]">Admin Dashboard</h1>
-
-//       {/* Summary Cards */}
-//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-//         {stats.map((item, index) => (
-//           <div key={index} className="bg-white p-5 rounded shadow hover:shadow-md border">
-//             <p className="text-gray-600">{item.label}</p>
-//             <p className="text-xl font-bold text-[#1652A1]">{item.value}</p>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Property Grid */}
-//       <div>
-//         <h2 className="text-xl font-semibold text-[#1652A1] mb-4">Properties</h2>
-//         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-//           {properties.map((property) => (
-//             <div
-//               key={property.id}
-//               className="cursor-pointer border rounded-md shadow hover:shadow-md transition"
-//               onClick={() => setActiveSection("property")}
-//             >
-//               <img
-//                 src={property.image}
-//                 alt={property.name}
-//                 className="w-full h-40 object-cover rounded-t-md"
-//               />
-//               <div className="p-3 text-center">
-//                 <h3 className="text-md font-semibold text-[#1652A1]">{property.name}</h3>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-
-//       {/* Recent Tenants */}
-//       <div>
-//         <h2 className="text-xl font-semibold text-[#1652A1] mb-4">Recent Tenants</h2>
-//         <div className="overflow-x-auto">
-//           <table className="min-w-full bg-white rounded-md overflow-hidden">
-//             <thead className="bg-blue-100 text-left">
-//               <tr>
-//                 <th className="px-4 py-2">Name</th>
-//                 <th className="px-4 py-2">Property</th>
-//                 <th className="px-4 py-2">Joined</th>
-//               </tr>
-//             </thead>
-//             <tbody className="text-gray-700">
-//               {recentTenants.map((tenant, index) => (
-//                 <tr
-//                   key={index}
-//                   className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-//                 >
-//                   <td className="px-4 py-2">{tenant.name}</td>
-//                   <td className="px-4 py-2">{tenant.property}</td>
-//                   <td className="px-4 py-2">{tenant.joined}</td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default AdminDashboard;
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import property1 from "../../assets/property-1.jpg";
-
 import {
-  Home,
+  House,
   Users,
   CreditCard,
   Wrench,
   TrendingUp,
   TrendingDown,
-  Eye,
   Plus,
-  Clock,
-  Calendar,
+  Eye,
   MapPin,
-  Phone,
-  Mail,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  Filter,
   Search,
-  Bell,
+  Mail,
+  Clock,
   DollarSign,
-  House,
+  Bell,
 } from "lucide-react";
 
 const AdminDashboard = ({ setActiveSection }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
   const [searchTerm, setSearchTerm] = useState("");
+  const [dashboardData, setDashboardData] = useState(null);
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const email = user?.email;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:3000/dashboard?testEmail=${email}`
+        );
+        setDashboardData(response.data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  if (!dashboardData) {
+    return <div className="p-6">Loading dashboard data...</div>;
+  }
+
+  const properties = dashboardData.properties || [];
+  const totalUnits = properties.reduce(
+    (acc, prop) => acc + prop.units.length,
+    0
+  );
+  const totalProperties = properties.length;
 
   const stats = [
     {
       label: "Total Properties",
-      value: 12,
+      value: totalProperties,
       icon: House,
-      change: "+2",
-      trend: "up",
       color: "bg-blue-50",
     },
     {
-      label: "Total Tenants",
-      value: 35,
+      label: "Total Units",
+      value: totalUnits,
       icon: Users,
-      change: "+5",
       trend: "up",
       color: "bg-green-50",
     },
     {
       label: "Pending Payments",
-      value: 5,
+      value: 0,
       icon: CreditCard,
-      change: "-2",
       trend: "down",
       color: "bg-yellow-50",
     },
     {
       label: "Maintenance Requests",
-      value: 3,
+      value: 0,
       icon: Wrench,
-      change: "+1",
       trend: "up",
       color: "bg-red-50",
     },
   ];
 
-  const properties = [
-    {
-      id: 1,
-      name: "Palm Residency",
-      image: property1,
-      units: 24,
-      occupied: 22,
-      revenue: "₹2,40,000",
-      status: "Excellent",
-      location: "Koramangala",
-    },
-    {
-      id: 2,
-      name: "Sky View Flats",
-      image: property1,
-      units: 18,
-      occupied: 16,
-      revenue: "₹1,80,000",
-      status: "Good",
-      location: "Indiranagar",
-    },
-    {
-      id: 3,
-      name: "Green Villas",
-      image: property1,
-      units: 12,
-      occupied: 10,
-      revenue: "₹1,20,000",
-      status: "Average",
-      location: "Whitefield",
-    },
-    {
-      id: 4,
-      name: "Ocean Heights",
-      image: property1,
-      units: 30,
-      occupied: 28,
-      revenue: "₹3,20,000",
-      status: "Excellent",
-      location: "Electronic City",
-    },
-  ];
+  const getOccupancyPercentage = (occupied, total) => {
+    return total === 0 ? 0 : Math.round((occupied / total) * 100);
+  };
 
-  const recentTenants = [
-    {
-      name: "Ravi Kumar",
-      property: "Palm Residency",
-      joined: "2024-04-21",
-      phone: "+91 98765 43210",
-      email: "ravi.kumar@email.com",
-      status: "Active",
-      rent: "₹12,000",
-    },
-    {
-      name: "Anjali Sharma",
-      property: "Sky View Flats",
-      joined: "2024-04-18",
-      phone: "+91 98765 43211",
-      email: "anjali.sharma@email.com",
-      status: "Active",
-      rent: "₹15,000",
-    },
-    {
-      name: "Rahul Mehta",
-      property: "Green Villas",
-      joined: "2024-04-10",
-      phone: "+91 98765 43212",
-      email: "rahul.mehta@email.com",
-      status: "Payment Due",
-      rent: "₹18,000",
-    },
-    {
-      name: "Priya Singh",
-      property: "Ocean Heights",
-      joined: "2024-04-08",
-      phone: "+91 98765 43213",
-      email: "priya.singh@email.com",
-      status: "Active",
-      rent: "₹20,000",
-    },
-    {
-      name: "Amit Patel",
-      property: "Palm Residency",
-      joined: "2024-04-05",
-      phone: "+91 98765 43214",
-      email: "amit.patel@email.com",
-      status: "Active",
-      rent: "₹11,000",
-    },
-  ];
-
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Excellent":
+        return "bg-green-100 text-green-800";
+      case "Good":
+        return "bg-blue-100 text-blue-800";
+      case "Average":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
   const recentActivities = [
     {
       type: "payment",
@@ -296,42 +129,6 @@ const AdminDashboard = ({ setActiveSection }) => {
     },
   ];
 
-  const filteredTenants = recentTenants.filter(
-    (tenant) =>
-      tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tenant.property.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getOccupancyPercentage = (occupied, total) => {
-    return Math.round((occupied / total) * 100);
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Excellent":
-        return "bg-green-100 text-green-800";
-      case "Good":
-        return "bg-blue-100 text-blue-800";
-      case "Average":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getTenantStatusColor = (status) => {
-    switch (status) {
-      case "Active":
-        return "bg-green-100 text-green-800";
-      case "Payment Due":
-        return "bg-red-100 text-red-800";
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   return (
     <div className="space-y-8 p-0 md:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -339,7 +136,8 @@ const AdminDashboard = ({ setActiveSection }) => {
         <div>
           <h1 className="text-3xl font-bold text-[#1652A1]">Admin Dashboard</h1>
           <p className="text-gray-600 mt-1">
-            Welcome back! Here's what's happening with your properties.
+            Welcome back, {dashboardData.name}! Here's what's happening with
+            your properties.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -360,13 +158,12 @@ const AdminDashboard = ({ setActiveSection }) => {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((item, index) => {
           const Icon = item.icon;
           const TrendIcon = item.trend === "up" ? TrendingUp : TrendingDown;
           const textColor = item.color.replace("bg-", "text-");
-
           return (
             <div
               key={index}
@@ -376,14 +173,6 @@ const AdminDashboard = ({ setActiveSection }) => {
                 <div className={`p-3 rounded-lg ${item.color} bg-opacity-10`}>
                   <Icon className={`w-8 h-8 ${textColor}`} strokeWidth={2} />
                 </div>
-                <div
-                  className={`flex items-center gap-1 text-sm ${
-                    item.trend === "up" ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  <TrendIcon className="w-8 h-8" />
-                  {item.change}
-                </div>
               </div>
               <p className="text-gray-600 text-sm mb-1">{item.label}</p>
               <p className="text-2xl font-bold text-[#1652A1]">{item.value}</p>
@@ -391,7 +180,6 @@ const AdminDashboard = ({ setActiveSection }) => {
           );
         })}
       </div>
-
       {/* Quick Actions */}
       <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
         <h2 className="text-xl font-semibold text-[#1652A1] mb-4">
@@ -429,7 +217,7 @@ const AdminDashboard = ({ setActiveSection }) => {
         </div>
       </div>
 
-      {/* Properties Grid */}
+      {/* Properties Overview */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-[#1652A1]">
@@ -445,13 +233,13 @@ const AdminDashboard = ({ setActiveSection }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {properties.map((property) => (
             <div
-              key={property.id}
+              key={property._id}
               className="cursor-pointer border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-105"
               onClick={() => setActiveSection("property")}
             >
               <div className="relative">
                 <img
-                  src={property.image}
+                  src={property1}
                   alt={property.name}
                   className="w-full h-48 object-cover rounded-t-xl"
                 />
@@ -466,18 +254,16 @@ const AdminDashboard = ({ setActiveSection }) => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Occupancy</span>
-                    <span className="font-medium">
-                      {property.occupied}/{property.units}
-                    </span>
+                    <span className="text-gray-600">Units</span>
+                    <span className="font-medium">{property.units.length}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-[#1652A1] h-2 rounded-full"
                       style={{
                         width: `${getOccupancyPercentage(
-                          property.occupied,
-                          property.units
+                          property.units.length - 1,
+                          property.units.length
                         )}%`,
                       }}
                     ></div>
@@ -486,9 +272,7 @@ const AdminDashboard = ({ setActiveSection }) => {
                     <span className="text-sm text-gray-600">
                       Monthly Revenue
                     </span>
-                    <span className="font-semibold text-green-600">
-                      {property.revenue}
-                    </span>
+                    <span className="font-semibold text-[#1652A1]">₹--</span>
                   </div>
                 </div>
               </div>
@@ -497,162 +281,40 @@ const AdminDashboard = ({ setActiveSection }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Tenants */}
-        <div className="lg:col-span-2 bg-white p-2 md:p-6 rounded-xl shadow-sm border border-gray-100">
-  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-    <h2 className="text-xl font-semibold text-[#1652A1]">
-      Recent Tenants
-    </h2>
-    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-      <div className="relative w-full sm:w-auto">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Search tenants..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full sm:w-auto pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent text-sm"
-        />
-      </div>
-      <button
-        onClick={() => setActiveSection("tenants")}
-        className="text-[#1652A1] hover:text-[#143d7a] flex items-center gap-2 text-sm font-medium whitespace-nowrap"
-      >
-        View All <Eye className="w-4 h-4" />
-      </button>
-    </div>
-  </div>
-  <div className="overflow-x-auto">
-    {/* Desktop Table */}
-    <table className="min-w-full hidden md:table">
-      <thead>
-        <tr className="border-b border-gray-200">
-          <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-            Tenant
-          </th>
-          <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-            Property
-          </th>
-          <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-            Rent
-          </th>
-          <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-            Status
-          </th>
-          <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-            Joined
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-100">
-        {filteredTenants.slice(0, 5).map((tenant, index) => (
-          <tr key={index} className="hover:bg-gray-50">
-            <td className="px-4 py-4">
-              <div>
-                <div className="font-medium text-gray-900">
-                  {tenant.name}
-                </div>
-                <div className="text-sm text-gray-500 flex items-center gap-1">
-                  <Mail className="w-3 h-3" />
-                  {tenant.email}
-                </div>
-              </div>
-            </td>
-            <td className="px-4 py-4 text-sm text-gray-900">
-              {tenant.property}
-            </td>
-            <td className="px-4 py-4 text-sm font-medium text-gray-900">
-              {tenant.rent}
-            </td>
-            <td className="px-4 py-4">
-              <span
-                className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getTenantStatusColor(
-                  tenant.status
-                )}`}
+      {/* Recent Activities */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h2 className="text-xl font-semibold text-[#1652A1] mb-6">
+          Recent Activities
+        </h2>
+        <div className="space-y-4">
+          {recentActivities.map((activity, index) => {
+            const Icon = activity.icon;
+            return (
+              <div
+                key={index}
+                className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
               >
-                {tenant.status}
-              </span>
-            </td>
-            <td className="px-4 py-4 text-sm text-gray-500">
-              {tenant.joined}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-    {/* Mobile Card Layout */}
-    <div className="md:hidden space-y-4">
-      {filteredTenants.slice(0, 5).map((tenant, index) => (
-        <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-100 hover:bg-gray-100">
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="font-medium text-gray-900">{tenant.name}</div>
-                <div className="text-sm text-gray-500 flex items-center gap-1">
-                  <Mail className="w-3 h-3" />
-                  {tenant.email}
-                </div>
-              </div>
-              <span
-                className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getTenantStatusColor(
-                  tenant.status
-                )}`}
-              >
-                {tenant.status}
-              </span>
-            </div>
-            <div className="text-sm text-gray-900">
-              <span className="font-medium">Property:</span> {tenant.property}
-            </div>
-            <div className="text-sm font-medium text-gray-900">
-              <span className="font-medium">Rent:</span> {tenant.rent}
-            </div>
-            <div className="text-sm text-gray-500">
-              <span className="font-medium">Joined:</span> {tenant.joined}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-</div>
-
-        {/* Recent Activities */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-xl font-semibold text-[#1652A1] mb-6">
-            Recent Activities
-          </h2>
-          <div className="space-y-4">
-            {recentActivities.map((activity, index) => {
-              const Icon = activity.icon;
-              return (
                 <div
-                  key={index}
-                  className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                  className={`p-2 rounded-full bg-gray-100 ${activity.color}`}
                 >
-                  <div
-                    className={`p-2 rounded-full bg-gray-100 ${activity.color}`}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 mb-1">
-                      {activity.message}
-                    </p>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <Clock className="w-3 h-3" />
-                      {activity.time}
-                    </div>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-900 mb-1">
+                    {activity.message}
+                  </p>
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <Clock className="w-3 h-3" />
+                    {activity.time}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-          <button className="w-full mt-4 text-center text-[#1652A1] hover:text-[#143d7a] text-sm font-medium py-2 border-t border-gray-100">
-            View All Activities
-          </button>
+              </div>
+            );
+          })}
         </div>
+        <button className="w-full mt-4 text-center text-[#1652A1] hover:text-[#143d7a] text-sm font-medium py-2 border-t border-gray-100">
+          View All Activities
+        </button>
       </div>
     </div>
   );

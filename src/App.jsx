@@ -3,11 +3,13 @@ import { Outlet } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; // ✅ Important
+import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from 'react-hot-toast';
 
 const App = () => {
   return (
     <div className="flex min-h-screen">
+
       <Sidebar />
       <div className="flex flex-col flex-1">
         <Navbar />

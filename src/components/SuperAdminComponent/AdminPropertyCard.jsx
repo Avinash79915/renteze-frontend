@@ -28,7 +28,7 @@ const PropertyCard = ({ property, setActiveProperty, handleDeleteProperty, setSh
 
       <div className="p-5">
         <div className="mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-1">{property.name}</h3>
+          <h3 className="text-lg font-semibold text-[#1652A1] mb-1 line-clamp-1">{property.name}</h3>
           <div className="flex items-center text-gray-600 text-sm">
             <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
             <span className="line-clamp-1">{property.address}</span>
@@ -37,24 +37,24 @@ const PropertyCard = ({ property, setActiveProperty, handleDeleteProperty, setSh
 
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="text-center">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mx-auto mb-1">
-              <Home className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg mx-auto mb-1">
+              <Home className="w-5 h-5 text-black" />
             </div>
-            <p className="text-lg font-bold text-gray-900">{totalUnits}</p>
+            <p className="text-lg font-bold text-[#1652A1]">{totalUnits}</p>
             <p className="text-xs text-gray-600">Total Units</p>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg mx-auto mb-1">
-              <Users className="w-5 h-5 text-green-600" />
+            <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg mx-auto mb-1">
+              <Users className="w-5 h-5 text-black" />
             </div>
-            <p className="text-lg font-bold text-gray-900">{occupiedUnits}</p>
+            <p className="text-lg font-bold text-[#1652A1]">{occupiedUnits}</p>
             <p className="text-xs text-gray-600">Occupied</p>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center w-10 h-10 bg-red-100 rounded-lg mx-auto mb-1">
-              <Building className="w-5 h-5 text-red-600" />
+            <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg mx-auto mb-1">
+              <Building className="w-5 h-5 text-black" />
             </div>
-            <p className="text-lg font-bold text-gray-900">{vacantUnits}</p>
+            <p className="text-lg font-bold text-[#1652A1]">{vacantUnits}</p>
             <p className="text-xs text-gray-600">Vacant</p>
           </div>
         </div>

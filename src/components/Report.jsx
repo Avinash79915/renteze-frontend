@@ -246,22 +246,30 @@ const Reports = () => {
       <h1 className="text-2xl mb-5 text-[#1652A1]">Reports</h1>
 
       {/* Status Indicators */}
-      <div className="flex gap-2 md:gap-3 mb-5 flex-wrap">
-  {Object.entries(statusColors).map(([label, color]) => (
-    <div
-      key={label}
-      onClick={() => setStatusFilter(statusFilter === label ? "" : label)}
-      className={`flex items-center gap-2 rounded-full cursor-pointer bg-[#F6F6F6] p-2 md:p-3 w-full sm:w-1/2 md:w-60 hover:bg-white hover:shadow transition ${
-        statusFilter === label ? "ring-2 ring-blue-400" : ""
-      }`}
-    >
-      <span
-        className={`w-8 h-8 md:w-10 md:h-10 rounded-full shrink-0 mt-1 ${color}`}
-      ></span>
-      <span className="break-words flex-1 text-sm md:text-base">{label}</span>
-    </div>
-  ))}
+<div className="flex gap-2 md:gap-3 mb-5 flex-wrap">
+  {Object.entries(statusColors).map(([label, color]) => {
+    const isActive = statusFilter === label;
+    return (
+      <div
+        key={label}
+        onClick={() => setStatusFilter(isActive ? "" : label)}
+        className={`flex items-center gap-2 rounded-full cursor-pointer 
+          transition-all duration-200 ease-in-out 
+          bg-gray-50 p-2 md:p-3 w-full sm:w-1/2 md:w-60 
+          shadow-md hover:shadow-none active:shadow-none 
+          ${isActive ? "shadow-none  bg-gray-200 " : ""}`}
+      >
+        <span
+          className={`w-8 h-8 md:w-10 md:h-10 rounded-full shrink-0 mt-1 ${color}`}
+        ></span>
+        <span className="break-words flex-1 text-sm md:text-base">
+          {label}
+        </span>
+      </div>
+    );
+  })}
 </div>
+
 
       {/* Tenant Report Section */}
       <h2 className="text-2xl mb-3 text-[#1652A1]">Tenant Report</h2>
@@ -387,25 +395,31 @@ const Reports = () => {
       {/* Payment Report Section */}
       <h2 className="text-2xl mb-3 text-[#1652A1]">Payment Report</h2>
 
-      {/* Payment Status Indicators */}
-      <div className="flex gap-3 mb-5 flex-wrap">
-        {Object.entries(paymentStatusColors).map(([label, color]) => (
-          <div
-            key={label}
-            onClick={() =>
-              setPaymentStatusFilter(paymentStatusFilter === label ? "" : label)
-            }
-            className={`flex items-center gap-2 rounded-full cursor-pointer bg-[#F6F6F6] p-3 w-40 hover:bg-white hover:shadow transition ${
-              paymentStatusFilter === label ? "ring-2 ring-blue-400" : ""
-            }`}
-          >
-            <span
-              className={`w-8 h-8 rounded-full shrink-0 ${color.split(" ")[0]}`}
-            ></span>
-            <span className="break-words flex-1">{label}</span>
-          </div>
-        ))}
+     {/* Payment Status Indicators */}
+<div className="flex gap-3 mb-5 flex-wrap">
+  {Object.entries(paymentStatusColors).map(([label, color]) => {
+    const isActive = paymentStatusFilter === label;
+    return (
+      <div
+        key={label}
+        onClick={() =>
+          setPaymentStatusFilter(isActive ? "" : label)
+        }
+        className={`flex items-center gap-2 rounded-full cursor-pointer
+          bg-gray-50 p-3 w-40
+          shadow-md hover:shadow-none active:shadow-none
+          transition-all duration-200 ease-in-out
+          ${isActive ? "shadow-none  bg-gray-200" : ""}`}
+      >
+        <span
+          className={`w-8 h-8 rounded-full shrink-0 ${color.split(" ")[0]}`}
+        ></span>
+        <span className="break-words flex-1 text-sm">{label}</span>
       </div>
+    );
+  })}
+</div>
+
 
       {/* Payment Search Bar */}
       <div className="mb-5">

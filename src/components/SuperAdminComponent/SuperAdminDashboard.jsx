@@ -124,18 +124,19 @@ const SuperAdminDashboard = () => {
   const totalPendingIssues = mockProperties.reduce((sum, prop) => sum + prop.pendingIssues, 0);
   const averageCollectionRate = Math.round(mockProperties.reduce((sum, prop) => sum + prop.collectionRate, 0) / mockProperties.length);
 
-  const StatCard = ({ icon: Icon, title, value, subtitle, color = "blue" }) => (
-    <div className="bg-white md:p-6 p-3  rounded-lg border border-gray-200">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className={`text-2xl font-bold text-${color}-600`}>{value}</p>
-          {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
-        </div>
-        <Icon className={`h-8 w-8 text-${color}-500`} />
+ const StatCard = ({ icon: Icon, title, value, subtitle, color = "#1652A1" }) => (
+  <div className="bg-white md:p-6 p-3 rounded-lg border border-gray-200">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-gray-600">{title}</p>
+        <p className="text-2xl font-bold" style={{ color }}>{value}</p>
+        {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
       </div>
+      <Icon className="h-8 w-8" style={{ color }} />
     </div>
-  );
+  </div>
+);
+
 
   const PropertyCard = ({ property }) => (
     <div className="bg-white md:p-6 p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
@@ -147,13 +148,7 @@ const SuperAdminDashboard = () => {
             {property.location}
           </p>
         </div>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          property.status === "Active" 
-            ? "bg-green-100 text-green-800" 
-            : "bg-yellow-100 text-yellow-800"
-        }`}>
-          {property.status}
-        </span>
+        
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -162,14 +157,14 @@ const SuperAdminDashboard = () => {
           <p className="text-lg font-semibold">{property.occupiedUnits}/{property.totalUnits}</p>
           <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
             <div 
-              className="bg-blue-600 h-2 rounded-full" 
+              className="bg-[#1652A1] h-2 rounded-full" 
               style={{width: `${(property.occupiedUnits/property.totalUnits)*100}%`}}
             ></div>
           </div>
         </div>
         <div>
           <p className="text-sm text-gray-600">Monthly Revenue</p>
-          <p className="text-lg font-semibold text-green-600">₹{(property.monthlyRent/1000)}K</p>
+          <p className="text-lg font-semibold text-[#1652A1]">₹{(property.monthlyRent/1000)}K</p>
           <p className="text-xs text-gray-500">{property.collectionRate}% collected</p>
         </div>
       </div>
@@ -188,7 +183,7 @@ const SuperAdminDashboard = () => {
           )}
           <button 
             onClick={() => setSelectedProperty(property)}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            className="text-[#1652A1] hover:text-blue-800 text-sm font-medium"
           >
             View Details
           </button>
@@ -244,28 +239,28 @@ const SuperAdminDashboard = () => {
           title="Total Properties" 
           value={totalProperties} 
           subtitle={`${totalUnits} total units`}
-          color="blue"
+          color="#1652A1"
         />
         <StatCard 
           icon={FiUsers} 
           title="Occupancy Rate" 
           value={`${Math.round((occupiedUnits/totalUnits)*100)}%`}
           subtitle={`${occupiedUnits} occupied / ${vacantUnits} vacant`}
-          color="green"
+          color="#1652A1"
         />
         <StatCard 
           icon={FiDollarSign} 
           title="Monthly Revenue" 
           value={`₹${(totalMonthlyRevenue/100000).toFixed(1)}L`}
           subtitle={`${averageCollectionRate}% collection rate`}
-          color="purple"
+          color="#1652A1"
         />
         <StatCard 
           icon={FiAlertCircle} 
           title="Pending Issues" 
           value={totalPendingIssues}
           subtitle="Across all properties"
-          color="orange"
+          color="#1652A1"
         />
       </div>
 
@@ -281,7 +276,7 @@ const SuperAdminDashboard = () => {
                   <p className="text-sm text-gray-600">{property.occupiedUnits} units occupied</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-green-600">₹{(property.monthlyRent/1000)}K</p>
+                  <p className="font-semibold text-[#1652A1]">₹{(property.monthlyRent/1000)}K</p>
                   <p className="text-sm text-gray-600">{property.collectionRate}% collected</p>
                 </div>
               </div>
@@ -296,22 +291,22 @@ const SuperAdminDashboard = () => {
               onClick={() => setActiveTab("properties")}
               className="w-full flex items-center gap-3 md:p-3 p-2 text-left hover:bg-gray-50 rounded transition-colors"
             >
-              <FiHome className="text-blue-600" />
+              <FiHome className="text-[#1652A1]" />
               <span>Manage Properties</span>
             </button>
             <button 
               onClick={() => setActiveTab("admins")}
               className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded transition-colors"
             >
-              <FiUsers className="text-green-600" />
+              <FiUsers className="text-[#1652A1]" />
               <span>Manage Admins</span>
             </button>
             <button className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded transition-colors">
-              <FiUsers className="text-purple-600" />
+              <FiUsers className="text-[#1652A1]" />
               <span>View Reports</span>
             </button>
             <button className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded transition-colors">
-              <FiPlus className="text-orange-600" />
+              <FiPlus className="text-[#1652A1]" />
               <span>Add New Property</span>
             </button>
           </div>
@@ -324,10 +319,7 @@ const SuperAdminDashboard = () => {
     <div className="space-y-6  ">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Property Management</h2>
-        <button className="bg-blue-600 text-white md:text-md text-xs px-2 md:px-4 py-2 rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
-          <FiPlus size={16} />
-          Add Property
-        </button>
+       
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
