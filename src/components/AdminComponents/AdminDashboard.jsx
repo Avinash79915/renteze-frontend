@@ -8,21 +8,18 @@ import {
   Wrench,
   TrendingUp,
   TrendingDown,
-  Plus,
   Eye,
   MapPin,
-  Search,
-  Mail,
   Clock,
   DollarSign,
   Bell,
 } from "lucide-react";
 
-const AdminDashboard = ({ setActiveSection }) => {
-  const [selectedTimeframe, setSelectedTimeframe] = useState("month");
-  const [searchTerm, setSearchTerm] = useState("");
+const AdminDashboard = ({
+  setActiveSection = () => {},
+  setActiveProperty = () => {},
+}) => {
   const [dashboardData, setDashboardData] = useState(null);
-
   const user = JSON.parse(localStorage.getItem("user"));
   const email = user?.email;
 
@@ -39,7 +36,7 @@ const AdminDashboard = ({ setActiveSection }) => {
     };
 
     fetchData();
-  }, [user]);
+  }, [email]);
 
   if (!dashboardData) {
     return <div className="p-6">Loading dashboard data...</div>;
@@ -50,12 +47,11 @@ const AdminDashboard = ({ setActiveSection }) => {
     (acc, prop) => acc + prop.units.length,
     0
   );
-  const totalProperties = properties.length;
 
   const stats = [
     {
       label: "Total Properties",
-      value: totalProperties,
+      value: properties.length,
       icon: House,
       color: "bg-blue-50",
     },
@@ -82,52 +78,40 @@ const AdminDashboard = ({ setActiveSection }) => {
     },
   ];
 
-  const getOccupancyPercentage = (occupied, total) => {
-    return total === 0 ? 0 : Math.round((occupied / total) * 100);
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Excellent":
-        return "bg-green-100 text-green-800";
-      case "Good":
-        return "bg-blue-100 text-blue-800";
-      case "Average":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
   const recentActivities = [
     {
       type: "payment",
       message: "Payment received from Ravi Kumar - ₹12,000",
       time: "2 hours ago",
       icon: DollarSign,
-      color: "text-green-600",
+      color: "text-[#1652A1]",
     },
     {
       type: "maintenance",
       message: "New maintenance request from Sky View Flats",
       time: "4 hours ago",
       icon: Wrench,
-      color: "text-orange-600",
+      color: "text-[#1652A1]",
     },
     {
       type: "tenant",
       message: "New tenant application for Green Villas",
       time: "6 hours ago",
       icon: Users,
-      color: "text-blue-600",
+      color: "text-[#1652A1]",
     },
     {
       type: "alert",
       message: "Rent reminder sent to 5 tenants",
       time: "1 day ago",
       icon: Bell,
-      color: "text-purple-600",
+      color: "text-[#1652A1]",
     },
   ];
+
+  const getOccupancyPercentage = (occupied, total) => {
+    return total === 0 ? 0 : Math.round((occupied / total) * 100);
+  };
 
   return (
     <div className="space-y-8 p-0 md:p-6 bg-gray-50 min-h-screen">
@@ -139,22 +123,6 @@ const AdminDashboard = ({ setActiveSection }) => {
             Welcome back, {dashboardData.name}! Here's what's happening with
             your properties.
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={selectedTimeframe}
-            onChange={(e) => setSelectedTimeframe(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-          >
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="quarter">This Quarter</option>
-            <option value="year">This Year</option>
-          </select>
-          <button className="bg-[#1652A1] hover:bg-[#143d7a] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-            <Plus className="w-4 h-4" />
-            Add Property
-          </button>
         </div>
       </div>
 
@@ -180,6 +148,8 @@ const AdminDashboard = ({ setActiveSection }) => {
           );
         })}
       </div>
+
+      {/* Quick Actions */}
       {/* Quick Actions */}
       <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
         <h2 className="text-xl font-semibold text-[#1652A1] mb-4">
@@ -187,55 +157,58 @@ const AdminDashboard = ({ setActiveSection }) => {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <button
-            onClick={() => setActiveSection("tenants")}
+            onClick={() => setActiveSection("tenant")}
             className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Users className="w-8 h-8 text-[#1652A1] mb-2" />
             <span className="text-sm text-gray-700">Manage Tenants</span>
           </button>
           <button
-            onClick={() => setActiveSection("payments")}
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <CreditCard className="w-8 h-8 text-[#1652A1] mb-2" />
-            <span className="text-sm text-gray-700">Payments</span>
-          </button>
-          <button
-            onClick={() => setActiveSection("maintenance")}
+            onClick={() => setActiveSection("communication")}
             className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Wrench className="w-8 h-8 text-[#1652A1] mb-2" />
-            <span className="text-sm text-gray-700">Maintenance</span>
+            <span className="text-sm text-gray-700">Communication</span>
           </button>
           <button
-            onClick={() => setActiveSection("reports")}
+            onClick={() => setActiveSection("report")}
             className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <TrendingUp className="w-8 h-8 text-[#1652A1] mb-2" />
             <span className="text-sm text-gray-700">Reports</span>
           </button>
+          <button
+            onClick={() => setActiveSection("property")}
+            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <House className="w-8 h-8 text-[#1652A1] mb-2" />
+            <span className="text-sm text-gray-700">Properties</span>
+          </button>
         </div>
       </div>
 
-      {/* Properties Overview */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-[#1652A1]">
             Properties Overview
           </h2>
           <button
-            onClick={() => setActiveSection("properties")}
+            onClick={() => setActiveSection("property")}
             className="text-[#1652A1] hover:text-[#143d7a] flex items-center gap-2 text-sm font-medium"
           >
             View All <Eye className="w-4 h-4" />
           </button>
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {properties.map((property) => (
+          {properties.slice(0, 4).map((property) => (
             <div
               key={property._id}
               className="cursor-pointer border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-105"
-              onClick={() => setActiveSection("property")}
+              onClick={() => {
+                setActiveSection("property");
+                setActiveProperty(property);
+              }}
             >
               <div className="relative">
                 <img

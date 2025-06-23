@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+    const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center  justify-center">
       {/* Hero Section */}
@@ -106,9 +109,12 @@ const Home = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-4 bg-white text-blue-900 rounded-lg hover:bg-gray-100 transition-all duration-200 font-light text-md shadow-lg">
-                Sign Up Free
-              </button>
+               <button
+            onClick={() => navigate("/signup")}
+            className="px-8 py-4 bg-white text-blue-900 rounded-lg hover:bg-gray-100 transition-all duration-200 font-light text-md shadow-lg"
+          >
+            Sign Up Free
+          </button>
               <button className="px-8 py-4 border-2 border-white text-white rounded-lg hover:bg-white hover:text-blue-900 transition-all duration-200 font-light text-md ">
                 Learn More
               </button>

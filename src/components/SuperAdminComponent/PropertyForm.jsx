@@ -10,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 const PropertyForm = ({ setShowAddForm, setProperties }) => {
   const [activeTab, setActiveTab] = useState("basic");
@@ -66,24 +67,43 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
     });
   };
 
-  const handleAddProperty = () => {
-  const { name, propertyNo, address, unitForm, locationPin } = propertyForm;
+ const handleAddProperty = async () => {
+  const { name, propertyNo, address, locationPin } = propertyForm;
 
-  if (!name.trim() || !propertyNo.trim() || !address.trim() || !locationPin.trim()  ) {
+  if (!name.trim() || !propertyNo.trim() || !address.trim() || !locationPin.trim()) {
     alert("Please fill all required fields");
     return;
   }
 
-  const newProperty = {
-    id: Date.now().toString(),
-    ...propertyForm,
-    units,
+  const user = JSON.parse(localStorage.getItem("user"));
+  const email = user?.email;
+
+  const payload = {
+    propertyName: name,
+    propertyAddress: address,
+    propertyLocation: locationPin,
   };
 
-  setProperties((prev) => [...prev, newProperty]);
-  resetPropertyForm();
-  setShowAddForm(false);
+  try {
+    const response = await axios.post(
+      `http://localhost:3000/create-property?testEmail=${email}`,
+      payload
+    );
+
+    if (response.status === 201 || response.status === 200) {
+      const updated = await axios.get(`http://localhost:3000/dashboard?testEmail=${email}`);
+      setProperties(updated.data.properties || []);
+      resetPropertyForm();
+      setShowAddForm(false);
+    } else {
+      alert("Failed to create property.");
+    }
+  } catch (error) {
+    console.error("Error creating property:", error);
+    alert("Internal Server Error: " + error?.response?.data?.message);
+  }
 };
+
 
 const handleAddUnit = () => {
   const { unitNumber } = unitForm;
@@ -106,20 +126,6 @@ const handleAddUnit = () => {
   });
 };
 
-
-  // const handleAddUnit = () => {
-  //   setUnits([...units, { id: Date.now().toString(), ...unitForm }]);
-  //   setUnitForm({
-  //     unitNumber: "",
-  //     area: "",
-  //     floorNumber: "",
-  //     unitType: "Apartment",
-  //     waterMeterNo: "",
-  //     electricMeterNo: "",
-  //     amenities: "",
-  //     occupancyStatus: "Vacant",
-  //   });
-  // };
 
   const handleDeleteUnit = (unitId) => {
     setUnits(units.filter((unit) => unit.id !== unitId));

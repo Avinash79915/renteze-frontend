@@ -2,11 +2,19 @@ import React from "react";
 import { Eye, Trash2, MapPin, Home, Users, Building } from "lucide-react";
 import property1 from "../../assets/property-1.jpg";
 
-const PropertyCard = ({ property, setActiveProperty, handleDeleteProperty, setShowAddForm }) => {
+const PropertyCard = ({
+  property,
+  setActiveProperty,
+  handleDeleteProperty,
+  setShowAddForm,
+}) => {
   const totalUnits = property.units?.length || 0;
-  const occupiedUnits = property.units?.filter((unit) => unit.occupancyStatus === "Occupied").length || 0;
+  const occupiedUnits =
+    property.units?.filter((unit) => unit.occupancyStatus === "Occupied")
+      .length || 0;
   const vacantUnits = totalUnits - occupiedUnits;
-  const occupancyRate = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
+  const occupancyRate =
+    totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
 
   return (
     <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group">
@@ -16,7 +24,7 @@ const PropertyCard = ({ property, setActiveProperty, handleDeleteProperty, setSh
           alt={property.name}
           className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        
+
         {property.propertyNo && (
           <div className="absolute top-3 left-3">
             <div className="px-2 py-1 bg-black bg-opacity-60 text-white text-xs rounded-md">
@@ -28,7 +36,9 @@ const PropertyCard = ({ property, setActiveProperty, handleDeleteProperty, setSh
 
       <div className="p-5">
         <div className="mb-3">
-          <h3 className="text-lg font-semibold text-[#1652A1] mb-1 line-clamp-1">{property.name}</h3>
+          <h3 className="text-lg font-semibold text-[#1652A1] mb-1 line-clamp-1">
+            {property.name}
+          </h3>
           <div className="flex items-center text-gray-600 text-sm">
             <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
             <span className="line-clamp-1">{property.address}</span>
@@ -62,7 +72,9 @@ const PropertyCard = ({ property, setActiveProperty, handleDeleteProperty, setSh
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
             <span className="text-xs text-gray-600">Occupancy Rate</span>
-            <span className="text-xs font-semibold text-gray-900">{occupancyRate}%</span>
+            <span className="text-xs font-semibold text-gray-900">
+              {occupancyRate}%
+            </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -92,10 +104,9 @@ const PropertyCard = ({ property, setActiveProperty, handleDeleteProperty, setSh
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleDeleteProperty(property.id);
+              handleDeleteProperty(property._id); 
             }}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete Property"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -109,13 +120,18 @@ const PropertyCard = ({ property, setActiveProperty, handleDeleteProperty, setSh
                   {vacantUnits} unit{vacantUnits !== 1 ? "s" : ""} available
                 </span>
               ) : (
-                <span className="text-green-600 font-medium">Fully occupied</span>
+                <span className="text-green-600 font-medium">
+                  Fully occupied
+                </span>
               )}
             </span>
             <span>
               {totalUnits > 0 && (
                 <span className="text-gray-500">
-                  {Math.round((totalUnits / (totalUnits > 0 ? totalUnits : 1)) * 100)}% capacity
+                  {Math.round(
+                    (totalUnits / (totalUnits > 0 ? totalUnits : 1)) * 100
+                  )}
+                  % capacity
                 </span>
               )}
             </span>

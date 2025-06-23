@@ -573,7 +573,7 @@ const UserManagement = () => {
 
       {/* Edit Admin Modal */}
       {showEditModal && selectedAdmin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+<div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Edit Admin</h3>
             <div className="space-y-4">
@@ -664,7 +664,7 @@ const UserManagement = () => {
 
       {/* Assign Properties Modal */}
       {showAssignModal && selectedAdmin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+<div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">
               Assign Properties to {selectedAdmin.name}
@@ -702,7 +702,7 @@ const UserManagement = () => {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={handlePropertyAssignment}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex-1 bg-[#1652A1]  text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Update Assignment
               </button>

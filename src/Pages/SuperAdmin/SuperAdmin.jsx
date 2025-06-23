@@ -7,11 +7,14 @@ import Dashboard from "../../components/SuperAdminComponent/SuperAdminDashboard"
 import TenantManagement from "../../components/SuperAdminComponent/TenantManagement";
 import UserManagement from "../../components/SuperAdminComponent/UserManagement";
 import AdminManagement from "../../components/SuperAdminComponent/AdminManagement";
+import EditProfile from "../../components/EditProfile";
+import Settings from "../../components/Settings"; 
+import History from "../../components/History";
 const SuperAdmin = ({ activeSection, setActiveSection }) => {
   const renderComponent = () => {
     switch (activeSection) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard  setActiveSection={setActiveSection}/>;
       case "user":
         return <UserManagement />;
       case "admin":
@@ -24,6 +27,12 @@ const SuperAdmin = ({ activeSection, setActiveSection }) => {
         return <Communication />;
       case "report":
         return <Report />;
+        case "editProfile":
+        return <EditProfile />;
+      case "settings":
+        return <Settings />;
+      case "history":
+        return <History />;
       default:
         return <div>Select an option</div>;
     }

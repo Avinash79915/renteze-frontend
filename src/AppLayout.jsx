@@ -1,4 +1,3 @@
-// src/AppLayout.jsx
 import React, { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -11,7 +10,7 @@ import TenantHome from "./Pages/tenant/TenantHome";
 const AppLayout = () => {
   const location = useLocation();
   const [activeSection, setActiveSection] = useState("dashboard");
-  const [userRole, setUserRole] = useState("guest"); // Default to 'guest'
+  const [userRole, setUserRole] = useState("guest");
 
   const { user } = useSelector((state) => state.auth);
 
@@ -21,7 +20,7 @@ const AppLayout = () => {
 
     if (roleFromStore) {
       setUserRole(roleFromStore);
-      localStorage.setItem("userRole", roleFromStore); // Sync with localStorage
+      localStorage.setItem("userRole", roleFromStore);
     } else if (roleFromStorage) {
       setUserRole(roleFromStorage);
     }
@@ -57,17 +56,20 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Responsive Sidebar */}
       <Sidebar
         role={userRole}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
       />
-
-      {/* Right section: responsive padding */}
       <div className="flex flex-col min-h-screen pl-0 md:pl-80">
-        <Navbar role={userRole} />
-        <main className="flex-1 p-0 md:p-4 overflow-y-auto">{renderPage()}</main>
+        <Navbar
+          role={userRole}
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+        />
+        <main className="flex-1 p-0 md:p-4 overflow-y-auto">
+          {renderPage()}
+        </main>
       </div>
     </div>
   );

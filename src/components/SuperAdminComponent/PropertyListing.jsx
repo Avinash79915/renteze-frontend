@@ -45,18 +45,19 @@ const email = user?.email;
     : [];
 
   const handleDeleteProperty = async (propertyId) => {
-    if (window.confirm("Are you sure you want to delete this property?")) {
-      try {
-        await axios.delete(`http://localhost:3000/properties/${propertyId}`);
-        setProperties((prev) => prev.filter((property) => property.id !== propertyId));
-        if (activeProperty?.id === propertyId) {
-          setActiveProperty(null);
-        }
-      } catch (error) {
-        console.error("Failed to delete property:", error);
+  if (window.confirm("Are you sure you want to delete this property?")) {
+    try {
+      await axios.delete(`http://localhost:3000/dashboard/${propertyId}`);
+      setProperties((prev) => prev.filter((property) => property._id !== propertyId)); 
+      if (activeProperty?._id === propertyId) {
+        setActiveProperty(null);
       }
+    } catch (error) {
+      console.error("Failed to delete property:", error);
     }
-  };
+  }
+};
+
 
   return (
     <div className="md:p-6 p-1 flex-1 relative overflow-y-auto">
@@ -132,7 +133,7 @@ const email = user?.email;
           ) : (
             filteredProperties.map((property) => (
               <PropertyCard
-                key={property.id}
+                key={property._id}
                 property={property}
                 setActiveProperty={setActiveProperty}
                 handleDeleteProperty={handleDeleteProperty}

@@ -19,7 +19,6 @@ const Sidebar = ({ activeSection, setActiveSection, role }) => {
 
   return (
     <>
-      {/* Mobile Menu Button */}
       <button
         onClick={toggleMobileMenu}
         className="md:hidden fixed top-2 left-2 z-50 p-2 text-[#004C86] "

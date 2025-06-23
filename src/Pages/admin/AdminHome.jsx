@@ -1,23 +1,31 @@
-// src/Pages/admin/AdminHome.jsx
 import React from "react";
 import PropertyList from "../../components/SuperAdminComponent/PropertyListing";
 import Communication from "../../components/Communication";
 import Report from "../../components/Report";
 import Dashboard from "../../components/AdminComponents/AdminDashboard";
 import TenantManagement from "../../components/SuperAdminComponent/TenantManagement";
+import EditProfile from "../../components/EditProfile";
+import Settings from "../../components/Settings"; 
+import History from "../../components/History";
 const AdminHome = ({ activeSection, setActiveSection }) => {
   const renderComponent = () => {
     switch (activeSection) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard setActiveSection={setActiveSection} />;
       case "property":
         return <PropertyList />;
-      case 'tenant':
+      case "tenant":
         return <TenantManagement />;
-      case 'communication':
+      case "communication":
         return <Communication />;
       case "report":
         return <Report />;
+      case "editProfile":
+        return <EditProfile />;
+      case "settings":
+        return <Settings />;
+      case "history":
+        return <History />;
       default:
         return <div>Select an option</div>;
     }

@@ -1,78 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
 import { FaReply } from "react-icons/fa";
 
-const demoMessages = [
-  {
-    id: 1,
-    tenantName: "Raj Kumar",
-    property: "Sky Residency",
-    date: "2025-06-13",
-    subject: "Rent Payment Delay",
-    message: "I might need a few extra days to complete rent payment.",
-    priority: "High",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    tenantName: "Anita Sharma",
-    property: "Palm Heights",
-    date: "2025-06-12",
-    subject: "Leaking Tap in Kitchen",
-    message: "There's a leaking tap that needs immediate repair.",
-    priority: "Medium",
-    status: "In Progress",
-  },
-  {
-    id: 3,
-    tenantName: "Amit Singh",
-    property: "Green View",
-    date: "2025-06-10",
-    subject: "Noise Complaint",
-    message: "Too much noise from neighbors after 10 PM.",
-    priority: "Low",
-    status: "Resolved",
-  },
-  {
-    id: 4,
-    tenantName: "Priya Mehta",
-    property: "Sunrise Towers",
-    date: "2025-06-14",
-    subject: "AC Not Working",
-    message:
-      "The air conditioning unit in my apartment stopped working yesterday.",
-    priority: "High",
-    status: "Pending",
-  },
-  {
-    id: 5,
-    tenantName: "Rohit Gupta",
-    property: "Ocean View",
-    date: "2025-06-11",
-    subject: "Parking Issue",
-    message: "My assigned parking spot is being used by someone else.",
-    priority: "Medium",
-    status: "In Progress",
-  },
-  {
-    id: 6,
-    tenantName: "Sneha Patel",
-    property: "Garden City",
-    date: "2025-06-09",
-    subject: "Thank You",
-    message: "Thank you for fixing the elevator quickly!",
-    priority: "Low",
-    status: "Resolved",
-  },
-];
-
 const Communication = () => {
   const [openId, setOpenId] = useState(null);
-  const [messages, setMessages] = useState(demoMessages);
+  const [messages, setMessages] = useState([]);
   const [replies, setReplies] = useState({});
   const [showReplyForm, setShowReplyForm] = useState({});
   const [priorityFilter, setPriorityFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+
+  useEffect(() => {
+    const fetchIssues = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:3000/dashboard?testEmail=atulreny911@gmail.com"
+        );
+        const apiData = res.data;
+
+        const transformedIssues = (apiData.issues || []).map((issue, idx) => ({
+          id: issue._id,
+          tenantName: "N/A", // Replace with tenant name if available
+          property: "N/A", // Replace with property name if needed
+          date: new Date(issue.createdAt).toISOString().split("T")[0],
+          subject: issue.title,
+          message: issue.description,
+          priority: issue.priority || "Low",
+          status: issue.status || "Pending",
+        }));
+
+        setMessages(transformedIssues);
+      } catch (error) {
+        console.error("Failed to fetch issues:", error);
+      }
+    };
+
+    fetchIssues();
+  }, []);
 
   const toggleOpen = (id) => {
     setOpenId((prev) => (prev === id ? null : id));
@@ -80,9 +45,15 @@ const Communication = () => {
   };
 
   const toggleReplyForm = (id, e) => {
-    e.stopPropagation();
-    setShowReplyForm((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  e.stopPropagation();
+
+  setOpenId((prev) => (prev === id ? prev : id));
+
+  setShowReplyForm((prev) => ({
+    ...prev,
+    [id]: !prev[id],
+  }));
+};
 
   const handleReplyChange = (id, value) => {
     setReplies((prev) => ({ ...prev, [id]: value }));
@@ -111,7 +82,6 @@ const Communication = () => {
     setShowReplyForm((prev) => ({ ...prev, [id]: false }));
   };
 
-  // Filter messages based on priority and status
   const filteredMessages = messages.filter((msg) => {
     const priorityMatch =
       priorityFilter === "All" || msg.priority === priorityFilter;
@@ -153,9 +123,9 @@ const Communication = () => {
 
   return (
     <div className="p-1 md:p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-3 md:gap-0">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-3 md:gap-10">
         <h1 className="text-xl md:text-2xl font-semibold text-[#004C86]">
-          Tenant Communication Dashboard
+          Admin Communication Dashboard
         </h1>
 
         {/* Filter Section */}
@@ -348,10 +318,7 @@ const Communication = () => {
                                   onClick={() => handleReplySubmit(msg.id)}
                                   className="bg-[#004C86] text-white px-3 py-1.5 md:px-4 md:py-2 rounded hover:bg-[#005fa6] transition-colors flex items-center gap-1 md:gap-2 text-xs md:text-sm"
                                 >
-                                  <FaReply
-                                    size={5}
-                                    className="md:h-5 md:w-5"
-                                  />
+                                  <FaReply size={5} className="md:h-5 md:w-5" />
                                   Send Reply
                                 </button>
                                 <button
