@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-
+import { useSelector } from "react-redux";
 const Home = () => {
-    const navigate = useNavigate();
+   const navigate = useNavigate();
+  const user = useSelector((state) => state.auth.user); // get logged-in user
+
+  useEffect(() => {
+    if (user?.role === "superadmin") {
+      navigate("/superadmin/home");
+    } else if (user?.role === "admin") {
+      navigate("/admin/home");
+    } else if (user?.role === "tenant") {
+      navigate("/tenant/home");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center  justify-center">
