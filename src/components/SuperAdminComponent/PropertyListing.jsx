@@ -19,7 +19,7 @@ const email = user?.email;
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/dashboard?testEmail=${email}`);
+        const response = await axios.get(`https://renteze.onrender.com/dashboard?testEmail=${email}`);
         console.log("API Response:", response.data);
 
         setProperties(response.data.properties || []);
@@ -47,7 +47,7 @@ const email = user?.email;
   const handleDeleteProperty = async (propertyId) => {
   if (window.confirm("Are you sure you want to delete this property?")) {
     try {
-      await axios.delete(`http://localhost:3000/dashboard/${propertyId}`);
+      await axios.delete(`https://renteze.onrender.com/dashboard/${propertyId}`);
       setProperties((prev) => prev.filter((property) => property._id !== propertyId)); 
       if (activeProperty?._id === propertyId) {
         setActiveProperty(null);

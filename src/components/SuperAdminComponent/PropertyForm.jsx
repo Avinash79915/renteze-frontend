@@ -86,12 +86,12 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
 
   try {
     const response = await axios.post(
-      `http://localhost:3000/create-property?testEmail=${email}`,
+      `https://renteze.onrender.com/create-property?testEmail=${email}`,
       payload
     );
 
     if (response.status === 201 || response.status === 200) {
-      const updated = await axios.get(`http://localhost:3000/dashboard?testEmail=${email}`);
+      const updated = await axios.get(`https://renteze.onrender.com/dashboard?testEmail=${email}`);
       setProperties(updated.data.properties || []);
       resetPropertyForm();
       setShowAddForm(false);

@@ -52,7 +52,7 @@ const TenantHome = () => {
   const FileLink = ({ href, children }) =>
     href ? (
       <a
-        href={`http://localhost:3000/${href}`}
+        href={`https://renteze.onrender.com/${href}`}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
@@ -71,7 +71,7 @@ const TenantHome = () => {
     const fetchTenant = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:3000/dashboard?testEmail=${email}`
+          `https://renteze.onrender.com/dashboard?testEmail=${email}`
         );
         setTenant(res.data.tenant);
       } catch (err) {

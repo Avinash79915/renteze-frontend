@@ -15,7 +15,7 @@ const Communication = () => {
     const fetchIssues = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:3000/dashboard?testEmail=atulreny911@gmail.com"
+          "https://renteze.onrender.com/dashboard?testEmail=atulreny911@gmail.com"
         );
         const apiData = res.data;
 

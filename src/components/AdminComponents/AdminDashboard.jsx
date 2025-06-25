@@ -27,7 +27,7 @@ const AdminDashboard = ({
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3000/dashboard?testEmail=${email}`
+          `https://renteze.onrender.com/dashboard?testEmail=${email}`
         );
         setDashboardData(response.data);
       } catch (error) {
