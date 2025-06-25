@@ -243,7 +243,7 @@ const Reports = () => {
 
   return (
     <div className="p-2 md:p-6">
-      <h1 className="text-2xl mb-5 text-[#1652A1]">Reports</h1>
+      <h1 className="text-2xl mb-5 text-[#1652A1]">Re ports</h1>
 
       {/* Status Indicators */}
 <div className="flex gap-2 md:gap-3 mb-5 flex-wrap">

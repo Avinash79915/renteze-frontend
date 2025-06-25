@@ -2,8 +2,9 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 
 // Layouts
-import AppLayout from "./AppLayout";
-import AuthLayout from "./AuthLayout";
+import AppLayout from "./AppLayout"; // Navbar + Sidebar
+import AuthLayout from "./AuthLayout"; // No Navbar/Sidebar
+import NavbarOnlyLayout from "./NavbarOnlyLayout"; // Only Navbar
 
 // Pages
 import Home from "./Pages/Home";
@@ -18,7 +19,7 @@ import OtpVerification from "./Pages/OtpVerification";
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Routes without sidebar/navbar */}
+      {/* Auth routes (no navbar/sidebar) */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginOptions />} />
         <Route path="/login/:role" element={<LoginForm />} />
@@ -26,9 +27,13 @@ const AppRoutes = () => {
         <Route path="/otp" element={<OtpVerification />} />
       </Route>
 
-      {/* Routes with sidebar/navbar */}
-      <Route element={<AppLayout />}>
+      {/* Only Navbar routes */}
+      <Route element={<NavbarOnlyLayout />}>
         <Route path="/" element={<Home />} />
+      </Route>
+
+      {/* Navbar + Sidebar routes */}
+      <Route element={<AppLayout />}>
         <Route path="/admin/home" element={<AdminDashboard />} />
         <Route path="/tenant/home" element={<TenantDashboard />} />
         <Route path="/superadmin/home" element={<SuperAdminDashboard />} />

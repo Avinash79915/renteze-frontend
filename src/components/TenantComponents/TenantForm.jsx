@@ -654,79 +654,122 @@ const TenantForm = React.memo(
               </div>
             )}
             {/* Financial Tab */}
-            {activeTab === "financial" && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Late Fee Per Day (₹)
-                    </label>
-                    <input
-                      type="number"
-                      value={tenantForm.lateFeePerDay}
-                      onChange={(e) =>
-                        setTenantForm({
-                          ...tenantForm,
-                          lateFeePerDay: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Payment Mode
-                    </label>
-                    <select
-                      value={tenantForm.paymentMode}
-                      onChange={(e) =>
-                        setTenantForm({
-                          ...tenantForm,
-                          paymentMode: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    >
-                      <option value="Cash">Cash</option>
-                      <option value="Bank Transfer">Bank Transfer</option>
-                      <option value="Cheque">Cheque</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Maintenance Charges (₹)
-                    </label>
-                    <input
-                      type="number"
-                      value={tenantForm.maintenanceCharges}
-                      onChange={(e) =>
-                        setTenantForm({
-                          ...tenantForm,
-                          maintenanceCharges: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notes
-                  </label>
-                  <textarea
-                    value={tenantForm.notes}
-                    onChange={(e) =>
-                      setTenantForm({ ...tenantForm, notes: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    rows="3"
-                    placeholder="Additional notes about the tenant"
-                  />
-                </div>
-              </div>
-            )}
+{activeTab === "financial" && (
+  <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Late Fee Per Day (₹)
+        </label>
+        <input
+          type="number"
+          value={tenantForm.lateFeePerDay}
+          onChange={(e) =>
+            setTenantForm({
+              ...tenantForm,
+              lateFeePerDay: e.target.value,
+            })
+          }
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Payment Mode
+        </label>
+        <select
+          value={tenantForm.paymentMode}
+          onChange={(e) =>
+            setTenantForm({
+              ...tenantForm,
+              paymentMode: e.target.value,
+            })
+          }
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+        >
+          <option value="Cash">Cash</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Cheque">Cheque</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Maintenance Charges (₹)
+        </label>
+        <input
+          type="number"
+          value={tenantForm.maintenanceCharges}
+          onChange={(e) =>
+            setTenantForm({
+              ...tenantForm,
+              maintenanceCharges: e.target.value,
+            })
+          }
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+        />
+      </div>
+    </div>
 
-            {/* Add other tabs similarly */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        Notes
+      </label>
+      <textarea
+        value={tenantForm.notes}
+        onChange={(e) =>
+          setTenantForm({ ...tenantForm, notes: e.target.value })
+        }
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+        rows="3"
+        placeholder="Additional notes about the tenant"
+      />
+    </div>
+
+    {/* 🔄 Split Payment Section */}
+    <div className="space-y-2">
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          checked={tenantForm.isSplitPayment}
+          onChange={(e) =>
+            setTenantForm({
+              ...tenantForm,
+              isSplitPayment: e.target.checked,
+            })
+          }
+          className="h-4 w-4 text-[#1652A1] border-gray-300 rounded"
+        />
+        <label className="text-sm text-gray-700">
+          Enable Split Payment
+        </label>
+      </div>
+
+      {tenantForm.isSplitPayment && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Split Payment Status
+          </label>
+          <select
+            value={tenantForm.splitStatus}
+            onChange={(e) =>
+              setTenantForm({
+                ...tenantForm,
+                splitStatus: e.target.value,
+              })
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+          >
+            <option value="Pending">Pending</option>
+            <option value="Partially Paid">Partially Paid</option>
+            <option value="Fully Paid">Fully Paid</option>
+          </select>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+
           </div>
 
           <div className="p-6 border-t border-gray-200">

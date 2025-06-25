@@ -17,7 +17,6 @@ const App = () => {
           <Outlet />
         </main>
 
-        {/* ✅ Toast container should be inside your main layout */}
         <ToastContainer position="top-right" autoClose={3000} />
       </div>
     </div>

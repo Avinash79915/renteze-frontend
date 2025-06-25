@@ -85,13 +85,13 @@ const TenantReport = () => {
   const getPaymentModeIcon = (mode) => {
     switch (mode) {
       case "UPI":
-        return <div className="w-2 h-2 bg-blue-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-[#1652A1] rounded-full"></div>;
       case "Bank Transfer":
-        return <div className="w-2 h-2 bg-green-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-[#1652A1] rounded-full"></div>;
       case "Credit Card":
-        return <div className="w-2 h-2 bg-purple-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-[#1652A1] rounded-full"></div>;
       default:
-        return <div className="w-2 h-2 bg-gray-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-[#1652A1] rounded-full"></div>;
     }
   };
 
@@ -100,7 +100,7 @@ const TenantReport = () => {
       <div className=" mx-auto p-1">
         {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">
+          <h1 className="text-3xl font-bold text-[#1652A1] mb-2">
             Payment Reports
           </h1>
           <p className="text-slate-600">
@@ -112,14 +112,14 @@ const TenantReport = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <FiCreditCard className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <FiCreditCard className="w-6 h-6 text-[#1652A1]" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-600">
                   Total Payments
                 </p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-2xl font-bold text-[#1652A1]">
                   ₹{totalAmount.toLocaleString()}
                 </p>
               </div>
@@ -128,14 +128,14 @@ const TenantReport = () => {
 
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <FiFileText className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <FiFileText className="w-6 h-6 text-[#1652A1]" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-600">
                   Total Transactions
                 </p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-2xl font-bold text-[#1652A1]">
                   {demoPayments.length}
                 </p>
               </div>
@@ -144,12 +144,12 @@ const TenantReport = () => {
 
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <FiCalendar className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <FiCalendar className="w-6 h-6 text-[#1652A1]" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-600">This Month</p>
-                <p className="text-2xl font-bold text-slate-900">Jan 2025</p>
+                <p className="text-2xl font-bold text-[#1652A1]">Jan 2025</p>
               </div>
             </div>
           </div>
@@ -197,22 +197,22 @@ const TenantReport = () => {
               <table className="w-full text-xs md:text-sm hidden md:table">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-[#1652A1] uppercase tracking-wider">
                       Transaction
                     </th>
-                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-[#1652A1] uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-[#1652A1] uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-[#1652A1] uppercase tracking-wider">
                       Payment Method
                     </th>
-                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-[#1652A1] uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-2 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-[#1652A1] uppercase tracking-wider">
                       Receipt
                     </th>
                   </tr>

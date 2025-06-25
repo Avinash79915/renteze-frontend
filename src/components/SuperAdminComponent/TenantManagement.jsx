@@ -19,7 +19,7 @@ import {
   Building,
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import TenantForm from "../TenantComponents/TenantForm"; // Import the new TenantForm component
+import TenantForm from "../TenantComponents/TenantForm";
 
 const TenantManagement = () => {
   const [tenants, setTenants] = useState([
@@ -178,6 +178,8 @@ const TenantManagement = () => {
       paymentMode: "Bank Transfer",
       maintenanceCharges: "",
       notes: "",
+      isSplitPayment: false,
+      splitStatus: "Pending",
       address: {
         doorNo: "",
         street: "",
