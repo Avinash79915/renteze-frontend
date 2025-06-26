@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import PropertyDetails from "./TenantPropertyDetails";
 import property1 from "../assets/property-1.jpg";
+
+import api from "../Pages/utils/axios"; 
+
 import {
   FiUser,
   FiMail,
@@ -55,7 +58,7 @@ const TenantHome = () => {
         href={`https://renteze.onrender.com/${href}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+        className="inline-flex items-center gap-2 text-[#1652A1] hover:text-blue-800 text-sm font-medium transition-colors"
       >
         {children}
         <FiExternalLink className="w-4 h-4" />
@@ -70,8 +73,8 @@ const TenantHome = () => {
   useEffect(() => {
     const fetchTenant = async () => {
       try {
-        const res = await axios.get(
-          `https://renteze.onrender.com/dashboard?testEmail=${email}`
+        const res = await api.get(
+          `/dashboard?testEmail=${email}`
         );
         setTenant(res.data.tenant);
       } catch (err) {

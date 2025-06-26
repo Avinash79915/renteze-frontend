@@ -12,11 +12,14 @@ import {
   Save,
   X,
 } from "lucide-react";
+import AddUnitForm from "../SuperAdminComponent/AddUnitForm";
 
-const PropertyDetail = ({ property }) => {
+const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
   const [showAddTenantModal, setShowAddTenantModal] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [editingTenant, setEditingTenant] = useState(null);
+  const [units, setUnits] = useState(property.units || []);
+  
   const [newTenant, setNewTenant] = useState({
     name: "",
     contact: "",
@@ -58,9 +61,20 @@ const PropertyDetail = ({ property }) => {
     setEditingTenant(null);
     setNewTenant({ name: "", contact: "", email: "", moveInDate: "" });
   };
-
+const handleAddUnit = (newUnit) => {
+    setUnits([...units, { ...newUnit, id: units.length + 1 }]);
+    setShowAddUnitForm(false);
+  };
   return (
     <div className="space-y-8 ">
+    
+      {showAddUnitForm && (
+        <AddUnitForm
+          property={property}
+          onSave={handleAddUnit}
+          onCancel={() => setShowAddUnitForm(false)}
+        />
+      )}
       {/* Property Header Card */}
       <div className="bg-gradient-to-r from-[#1652A1] to-[#009CDC] rounded-2xl p-4 sm:p-6 md:p-8 text-white shadow-xl">
         {/* Top Section: Icon + Title */}

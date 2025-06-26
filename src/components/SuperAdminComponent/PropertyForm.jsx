@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import axios from "axios";
+import api from "../../Pages/utils/axios"; 
 
 const PropertyForm = ({ setShowAddForm, setProperties }) => {
   const [activeTab, setActiveTab] = useState("basic");
@@ -85,13 +86,12 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
   };
 
   try {
-    const response = await axios.post(
-      `https://renteze.onrender.com/create-property?testEmail=${email}`,
+    const response = await api.post(`/create-property?testEmail=${email}`,
       payload
     );
 
     if (response.status === 201 || response.status === 200) {
-      const updated = await axios.get(`https://renteze.onrender.com/dashboard?testEmail=${email}`);
+      const updated = await api.get(`/dashboard?testEmail=${email}`);
       setProperties(updated.data.properties || []);
       resetPropertyForm();
       setShowAddForm(false);

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import property1 from "../../assets/property-1.jpg";
+import api from "../../Pages/utils/axios"; 
+
 import {
   House,
   Users,
@@ -24,19 +26,17 @@ const AdminDashboard = ({
   const email = user?.email;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `https://renteze.onrender.com/dashboard?testEmail=${email}`
-        );
-        setDashboardData(response.data);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      const response = await api.get(`/dashboard?testEmail=${email}`);
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    }
+  };
 
-    fetchData();
-  }, [email]);
+  fetchData();
+}, [email]);
 
   if (!dashboardData) {
     return <div className="p-6">Loading dashboard data...</div>;

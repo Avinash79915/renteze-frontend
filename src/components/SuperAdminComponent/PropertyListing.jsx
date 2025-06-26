@@ -5,6 +5,7 @@ import axios from "axios";
 import PropertyCard from "./AdminPropertyCard";
 import PropertyForm from "./PropertyForm";
 import PropertyDetail from "./PropertyDetail";
+import api from "../../Pages/utils/axios";
 
 const PropertyListing = () => {
   const [properties, setProperties] = useState([]);
@@ -12,22 +13,20 @@ const PropertyListing = () => {
   const [activeProperty, setActiveProperty] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showAddUnitForm, setShowAddUnitForm] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
-const email = user?.email;
+  const email = user?.email;
 
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await axios.get(`https://renteze.onrender.com/dashboard?testEmail=${email}`);
-        console.log("API Response:", response.data);
+        const response = await api.get(`/dashboard?testEmail=${email}`);
 
         setProperties(response.data.properties || []);
-
-        
       } catch (error) {
         console.error("Error fetching properties:", error);
-        setProperties([]); 
+        setProperties([]);
       } finally {
         setLoading(false);
       }
@@ -45,19 +44,20 @@ const email = user?.email;
     : [];
 
   const handleDeleteProperty = async (propertyId) => {
-  if (window.confirm("Are you sure you want to delete this property?")) {
-    try {
-      await axios.delete(`https://renteze.onrender.com/dashboard/${propertyId}`);
-      setProperties((prev) => prev.filter((property) => property._id !== propertyId)); 
-      if (activeProperty?._id === propertyId) {
-        setActiveProperty(null);
+    if (window.confirm("Are you sure you want to delete this property?")) {
+      try {
+        await api.delete(`/dashboard/${propertyId}`);
+        setProperties((prev) =>
+          prev.filter((property) => property._id !== propertyId)
+        );
+        if (activeProperty?._id === propertyId) {
+          setActiveProperty(null);
+        }
+      } catch (error) {
+        console.error("Failed to delete property:", error);
       }
-    } catch (error) {
-      console.error("Failed to delete property:", error);
     }
-  }
-};
-
+  };
 
   return (
     <div className="md:p-6 p-1 flex-1 relative overflow-y-auto">
@@ -66,16 +66,31 @@ const email = user?.email;
         <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">
           Super Admin Property Listings
         </h2>
-        <button
-          onClick={() => {
-            setShowAddForm(true);
-            setActiveProperty(null);
-          }}
-          className="flex items-center gap-2 px-3 py-2 text-sm md:text-md bg-[#1652A1] text-white rounded-lg hover:bg-[#134a8e]"
-        >
-          <Plus className="w-5 h-5" />
-          Add Property
-        </button>
+
+        {!activeProperty ? (
+          <button
+            onClick={() => {
+              setShowAddForm(true);
+              setActiveProperty(null);
+              setShowAddUnitForm(false);
+            }}
+            className="flex items-center gap-2 px-3 py-2 text-sm md:text-md bg-[#1652A1] text-white rounded-lg hover:bg-[#134a8e]"
+          >
+            <Plus className="w-5 h-5" />
+            Add Property
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              setShowAddUnitForm(true);
+              setShowAddForm(false);
+            }}
+            className="flex items-center gap-2 px-3 py-2 text-sm md:text-md bg-[#1652A1] text-white rounded-lg hover:bg-[#134a8e]"
+          >
+            <Plus className="w-5 h-5" />
+            Add Unit
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -116,7 +131,11 @@ const email = user?.email;
               Property Details
             </h3>
           </div>
-          <PropertyDetail property={activeProperty} />
+          <PropertyDetail
+            property={activeProperty}
+            showAddUnitForm={showAddUnitForm}
+            setShowAddUnitForm={setShowAddUnitForm}
+          />
         </div>
       ) : (
         // Property Cards Grid

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
 import { FaReply } from "react-icons/fa";
+import api from "../Pages/utils/axios"; 
 
 const Communication = () => {
   const [openId, setOpenId] = useState(null);
@@ -11,18 +12,18 @@ const Communication = () => {
   const [priorityFilter, setPriorityFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
+  const user = JSON.parse(localStorage.getItem("user"));
+  const email = user?.email;
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const res = await axios.get(
-          "https://renteze.onrender.com/dashboard?testEmail=atulreny911@gmail.com"
-        );
+        const res = await api.get(  `/dashboard?testEmail=${email}`);
         const apiData = res.data;
 
         const transformedIssues = (apiData.issues || []).map((issue, idx) => ({
           id: issue._id,
-          tenantName: "N/A", // Replace with tenant name if available
-          property: "N/A", // Replace with property name if needed
+          tenantName: "N/A", 
+          property: "N/A", 
           date: new Date(issue.createdAt).toISOString().split("T")[0],
           subject: issue.title,
           message: issue.description,
