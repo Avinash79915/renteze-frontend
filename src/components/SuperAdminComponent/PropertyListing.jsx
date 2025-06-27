@@ -18,21 +18,37 @@ const PropertyListing = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const email = user?.email;
 
+  const reloadProperties = async () => {
+    setLoading(true);
+    try {
+      // 1) Fetch properties first
+      const res = await api.get(`/dashboard?testEmail=${email}&nocache=${Date.now()}`);
+      const props = res.data.properties || [];
+
+      // 2) For each property, fetch its latest units
+      const updatedProps = await Promise.all(
+        props.map(async (property) => {
+          try {
+            const unitRes = await api.get(`/unit/property/${property._id}?testEmail=${email}`);
+            return { ...property, units: unitRes.data.units || [] };
+          } catch (error) {
+            console.error(`Failed to fetch units for property ${property._id}`, error);
+            return { ...property, units: [] };
+          }
+        })
+      );
+
+      setProperties(updatedProps);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        const response = await api.get(`/dashboard?testEmail=${email}`);
-
-        setProperties(response.data.properties || []);
-      } catch (error) {
-        console.error("Error fetching properties:", error);
-        setProperties([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProperties();
+    reloadProperties();
   }, []);
 
   const filteredProperties = Array.isArray(properties)
@@ -125,7 +141,6 @@ const PropertyListing = () => {
               className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm md:text-base"
             >
               <ArrowLeft className="w-5 h-5" />
-              Back to Properties
             </button>
             <h3 className="text-lg md:text-xl font-semibold text-gray-900">
               Property Details
@@ -135,6 +150,7 @@ const PropertyListing = () => {
             property={activeProperty}
             showAddUnitForm={showAddUnitForm}
             setShowAddUnitForm={setShowAddUnitForm}
+            reloadProperties={reloadProperties}
           />
         </div>
       ) : (

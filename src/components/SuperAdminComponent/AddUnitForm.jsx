@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Home } from "lucide-react";
+import api from "../../Pages/utils/axios";
 
-const AddUnitForm = ({ property, onSave, onCancel }) => {
+const AddUnitForm = ({ property, existingUnit, onSave, onCancel }) => {
   const [newUnit, setNewUnit] = useState({
     unitNumber: "",
     unitType: "",
@@ -9,35 +10,83 @@ const AddUnitForm = ({ property, onSave, onCancel }) => {
     area: "",
     bedrooms: "",
     bathrooms: "",
+    rentCost: "",
+    maintenanceCost: "",
+    bescomNumber: "",
     image: "",
+    occupancyStatus: "Vacant",
   });
 
-  const handleSave = () => {
-    // Validate required fields
-    if (!newUnit.unitNumber || !newUnit.unitType) {
-      alert("Unit Number and Unit Type are required");
+  useEffect(() => {
+    if (existingUnit) {
+      setNewUnit({
+        unitNumber: existingUnit.roomId || "",
+        unitType: existingUnit.unitType || "Apartment", // ✅ default to valid option
+        floorNumber: existingUnit.floor?.toString() || "",
+        area: existingUnit.roomArea || "",
+        bedrooms: existingUnit.bedrooms || "",
+        bathrooms: existingUnit.bathrooms || "",
+        rentCost: existingUnit.rentCost?.toString() || "",
+        maintenanceCost: existingUnit.maintenanceCost?.toString() || "",
+        bescomNumber: existingUnit.bescomNumber || "",
+        image: existingUnit.image || "",
+        occupancyStatus: existingUnit.occupancyStatus || "Vacant",
+      });
+    }
+  }, [existingUnit]);
+
+  const handleSave = async () => {
+    if (!newUnit.unitNumber || !newUnit.unitType || !newUnit.bescomNumber) {
+      alert("Unit Number, Unit Type, and BESCOM Number are required");
       return;
     }
 
-    // Pass the new unit data to the parent component
-    onSave({
-      ...newUnit,
-      rooms: {
-        bedrooms: parseInt(newUnit.bedrooms) || 0,
-        bathrooms: parseInt(newUnit.bathrooms) || 0,
-      },
-      occupancyStatus: "Vacant",
-    });
-    // Reset form
-    setNewUnit({
-      unitNumber: "",
-      unitType: "",
-      floorNumber: "",
-      area: "",
-      bedrooms: "",
-      bathrooms: "",
-      image: "",
-    });
+    const payload = {
+      roomId: newUnit.unitNumber,
+      roomArea: newUnit.area || "0",
+      floor: parseInt(newUnit.floorNumber) || 0,
+      rentCost: parseFloat(newUnit.rentCost) || 0,
+      maintenanceCost: parseFloat(newUnit.maintenanceCost) || 0,
+      bescomNumber: newUnit.bescomNumber,
+      hasWaterConnection: false,
+      hasIndependentToilet: false,
+      occupancyStatus: newUnit.occupancyStatus,
+    };
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    const email = user?.email;
+
+    try {
+      let response;
+      if (existingUnit) {
+        response = await api.patch(
+          `/unit/${existingUnit._id}`,
+          payload,
+          { params: { testEmail: email } } 
+        );
+      } else {
+        response = await api.post(
+          `/unit/property/${property._id}/create`,
+          payload,
+          { params: { testEmail: email } }
+        );
+      }
+
+      console.log("Unit saved successfully:", response.data);
+      alert(
+        existingUnit
+          ? "Unit updated successfully!"
+          : "Unit created successfully!"
+      );
+      onSave();
+    } catch (error) {
+      console.error("Request failed:", error.response?.data || error.message);
+      alert(
+        `Failed to save unit: ${
+          error.response?.data?.message || "Please try again."
+        }`
+      );
+    }
   };
 
   return (
@@ -48,7 +97,9 @@ const AddUnitForm = ({ property, onSave, onCancel }) => {
             <Home className="w-6 h-6 text-black" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">
-            Add New Unit to {property.name}
+            {existingUnit
+              ? `Edit Unit ${existingUnit.roomId}`
+              : `Add New Unit to ${property.name}`}
           </h3>
         </div>
         <button
@@ -71,9 +122,9 @@ const AddUnitForm = ({ property, onSave, onCancel }) => {
             onChange={(e) =>
               setNewUnit({ ...newUnit, unitNumber: e.target.value })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1]"
             placeholder="Enter unit number"
-            required
+            required={!existingUnit}
           />
         </div>
 
@@ -86,8 +137,8 @@ const AddUnitForm = ({ property, onSave, onCancel }) => {
             onChange={(e) =>
               setNewUnit({ ...newUnit, unitType: e.target.value })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1]"
+            required={!existingUnit && newUnit.unitType === ""} // ✅ force selection only for new units
           >
             <option value="">Select unit type</option>
             <option value="Apartment">Apartment</option>
@@ -107,7 +158,7 @@ const AddUnitForm = ({ property, onSave, onCancel }) => {
             onChange={(e) =>
               setNewUnit({ ...newUnit, floorNumber: e.target.value })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1]"
             placeholder="Enter floor number"
           />
         </div>
@@ -120,52 +171,41 @@ const AddUnitForm = ({ property, onSave, onCancel }) => {
             type="number"
             value={newUnit.area}
             onChange={(e) => setNewUnit({ ...newUnit, area: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1]"
             placeholder="Enter area in sqft"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Bedrooms
-          </label>
-          <input
-            type="number"
-            value={newUnit.bedrooms}
-            onChange={(e) =>
-              setNewUnit({ ...newUnit, bedrooms: e.target.value })
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-            placeholder="Enter number of bedrooms"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Bathrooms
-          </label>
-          <input
-            type="number"
-            value={newUnit.bathrooms}
-            onChange={(e) =>
-              setNewUnit({ ...newUnit, bathrooms: e.target.value })
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-            placeholder="Enter number of bathrooms"
           />
         </div>
 
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Image URL (Optional)
+            BESCOM Number
           </label>
           <input
-            type="url"
-            value={newUnit.image}
-            onChange={(e) => setNewUnit({ ...newUnit, image: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-            placeholder="Enter image URL"
+            type="text"
+            value={newUnit.bescomNumber}
+            onChange={(e) =>
+              setNewUnit({ ...newUnit, bescomNumber: e.target.value })
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1]"
+            placeholder="Enter BESCOM number"
+            required={!existingUnit}
           />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Occupancy Status
+          </label>
+          <select
+            value={newUnit.occupancyStatus}
+            onChange={(e) =>
+              setNewUnit({ ...newUnit, occupancyStatus: e.target.value })
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1]"
+          >
+            <option value="Vacant">Vacant</option>
+            <option value="Occupied">Occupied</option>
+          </select>
         </div>
       </div>
 
@@ -180,7 +220,7 @@ const AddUnitForm = ({ property, onSave, onCancel }) => {
           onClick={handleSave}
           className="flex-1 px-4 py-2 bg-[#1652A1] text-white rounded-lg hover:bg-[#134a8e] transition-colors"
         >
-          Add Unit
+          {existingUnit ? "Update Unit" : "Add Unit"}
         </button>
       </div>
     </div>
