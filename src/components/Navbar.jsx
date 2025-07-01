@@ -2,10 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/auth/authSlice";
-import { setQuery } from "../features/filter/filterSlice";
 import { toast } from "react-toastify";
+import api from "../Pages/utils/axios";
 import {
-  FiSearch,
   FiSettings,
   FiLogOut,
   FiEdit,
@@ -14,48 +13,24 @@ import {
   FiBell,
   FiClock,
 } from "react-icons/fi";
-import { MdOutlineMessage } from "react-icons/md";
-import { FaHistory } from "react-icons/fa";
-
 import demo from "../assets/Avatar.svg";
 
 const Navbar = ({ activeSection, setActiveSection }) => {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const { query } = useSelector((state) => state.filter);
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const email = user?.email;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
 
-  const recentActivities = [
-    {
-      icon: MdOutlineMessage,
-      message: "Pipe leaking",
-      time: "2 hours ago",
-      color: "text-[#1652A1]",
-    },
-    {
-      icon: FiBell,
-      message: "New property listed in your area",
-      time: "2 hours ago",
-      color: "text-[#1652A1]",
-    },
-    {
-      icon: FiEdit,
-      message: "Your profile was updated",
-      time: "Yesterday",
-      color: "text-[#1652A1]",
-    },
-    {
-      icon: FiLogIn,
-      message: "New login detected",
-      time: "2 days ago",
-      color: "text-[#1652A1]",
-    },
-  ];
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [errorNotifications, setErrorNotifications] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -72,6 +47,31 @@ const Navbar = ({ activeSection, setActiveSection }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || !email) return;
+
+    const fetchNotifications = async () => {
+      setLoadingNotifications(true);
+      setErrorNotifications(null);
+
+      try {
+        const response = await api.get(`/notifications?email=${email}`);
+        setNotifications(response.data.notifications || []);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        setErrorNotifications("Could not load notifications.");
+      } finally {
+        setLoadingNotifications(false);
+      }
+    };
+
+    fetchNotifications(); // initial fetch right away
+
+    const interval = setInterval(fetchNotifications, 10000); // fetch every 10 seconds
+
+    return () => clearInterval(interval); // cleanup on unmount or dependency change
+  }, [isAuthenticated, email]);
 
   const handleLogout = () => {
     setDropdownOpen(false);
@@ -144,29 +144,6 @@ const Navbar = ({ activeSection, setActiveSection }) => {
                   Edit Profile
                 </button>
 
-                {/* <button
-                  className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    setActiveSection("settings");
-                  }}
-                >
-                  <FiSettings className="mr-3" size={16} />
-                  Settings
-                </button> */}
-
-                <button
-                  className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    setActiveSection("history");
-                  }}
-                >
-                  <FaHistory  className="mr-3" size={16}  />
-
-                  History 
-                </button>
-
                 <button
                   onClick={handleLogout}
                   className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
@@ -186,7 +163,9 @@ const Navbar = ({ activeSection, setActiveSection }) => {
                 className="relative text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100 transition-colors"
               >
                 <FiBell size={20} />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                {notifications.some((n) => !n.isRead) && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
               </button>
 
               <div
@@ -201,39 +180,64 @@ const Navbar = ({ activeSection, setActiveSection }) => {
                     Recent Activities
                   </h2>
                   <div className="space-y-4">
-                    {recentActivities.map((activity, index) => {
-                      const Icon = activity.icon;
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-start gap-1 p-1 hover:bg-gray-50 rounded-lg transition-colors"
-                        >
-                          <div
-                            className={`p-2 rounded-full bg-gray-100 ${activity.color}`}
-                          >
-                            <Icon className="w-4 h-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-900 mb-1">
-                              {activity.message}
-                            </p>
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
-                              <FiClock className="w-3 h-3" />
-                              {activity.time}
-                            </div>
+                    {loadingNotifications && (
+                      <p className="text-sm text-gray-500 text-center py-2">
+                        Loading...
+                      </p>
+                    )}
+                    {errorNotifications && (
+                      <p className="text-sm text-red-500 text-center py-2">
+                        {errorNotifications}
+                      </p>
+                    )}
+                    {notifications.length === 0 &&
+                      !loadingNotifications &&
+                      !errorNotifications && (
+                        <p className="text-sm text-gray-500 text-center py-2">
+                          No notifications.
+                        </p>
+                      )}
+
+                    {notifications.map((activity, index) => (
+                      <div
+                        key={activity._id || index}
+                        className="flex items-start gap-1 p-1 hover:bg-gray-50 rounded-lg transition-colors"
+                      >
+                        <div className="p-2 rounded-full bg-gray-100 text-[#1652A1]">
+                          <FiBell className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900 mb-1">
+                            {activity.title}
+                          </p>
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <FiClock className="w-3 h-3" />
+                            {new Date(activity.createdAt).toLocaleString()}
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                   <button
                     className="w-full mt-4 text-center text-[#1652A1] hover:text-[#143d7a] text-sm font-medium py-2 border-t border-gray-100"
-                    onClick={() => {
-                      setNotificationOpen(false);
-                      setActiveSection("notifications");
+                    onClick={async () => {
+                      try {
+                        await api.patch(
+                          `/notifications/markAllRead?email=${email}`
+                        );
+                        setNotifications([]); // Clear local notifications immediately
+                        setNotificationOpen(false);
+                        toast.success("All notifications marked as read!");
+                      } catch (error) {
+                        console.error(
+                          "Failed to mark notifications as read:",
+                          error
+                        );
+                        toast.error("Could not mark notifications as read.");
+                      }
                     }}
                   >
-                    View All Activities
+                    Mark All as Read
                   </button>
                 </div>
               </div>

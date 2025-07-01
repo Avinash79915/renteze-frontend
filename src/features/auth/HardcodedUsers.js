@@ -4,8 +4,8 @@ export const users = [
     username: "admin",
     password: "admin123",
     role: "admin",
-    name: "Admin User", 
-    email: "admin@example.com", 
+    name: "Admin User",
+    email: "admin@example.com",
   },
   {
     id: 2,
@@ -24,12 +24,12 @@ export const users = [
     email: "superadmin@example.com",
   },
   {
-    id: 4,
+    id: 4, 
     username: "Atul",
     password: "Atul123",
     role: "admin",
     name: " Admin User",
-    email: "atulreny911@gmail.com", 
+    email: "atulreny911@gmail.com",
   },
   {
     id: 5,
@@ -37,6 +37,14 @@ export const users = [
     password: "avinash123",
     role: "tenant",
     name: "Tenant User",
-    email: "atulreny711@gmail.com", 
+    email: "atulreny711@gmail.com",
+  },
+  {
+    id: 5,
+    username: "nikhil",
+    password: "nikhil123",
+    role: "tenant",
+    name: "Tenant User",
+    email: "imnikhilmathew@gmail.com",
   },
 ];

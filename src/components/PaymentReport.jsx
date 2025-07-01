@@ -192,14 +192,17 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
               <th className="p-2 md:p-3 border-b border-gray-200">
                 Invoice Type
               </th>
+              <th className="p-2 md:p-3 border-b border-gray-200">
+                Payment Mode
+              </th>{" "}
+              {/* ✅ NEW COLUMN */}
               <th className="p-2 md:p-3 border-b border-gray-200">Status</th>
               <th className="p-2 md:p-3 border-b border-gray-200">Paid On</th>
               <th className="p-2 md:p-3 border-b border-gray-200">
                 Payment Method
               </th>
-              <th className="p-2 md:p-3 border-b border-gray-200">
-                Update Status
-              </th>
+              <th className="p-2 md:p-3 border-b border-gray-200">Actions</th>{" "}
+              {/* ✅ Updated label */}
             </tr>
           </thead>
           <tbody>
@@ -210,6 +213,10 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
                   <td className="p-2 md:p-3 font-semibold">{payment.amount}</td>
                   <td className="p-2 md:p-3">{payment.invoiceMonth}</td>
                   <td className="p-2 md:p-3">{payment.invoiceType}</td>
+                  <td className="p-2 md:p-3">
+                    {payment.paymentMode || "Full"}
+                  </td>{" "}
+                  {/* ✅ NEW CELL */}
                   <td className="p-2 md:p-3">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
@@ -222,48 +229,35 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
                   <td className="p-2 md:p-3">{payment.paidOn}</td>
                   <td className="p-2 md:p-3">{payment.paymentMethod}</td>
                   <td className="p-2 md:p-3 flex items-center gap-2">
-                    <select
-                      value={payment.status}
-                      onChange={(e) =>
-                        handleStatusChange(payment.id, e.target.value)
-                      }
-                      className="p-1 md:p-2 border border-gray-300 rounded-md text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    {/* ✅ Removed the status select; only show edit & PDF buttons */}
+                    <button
+                      className="text-[#1652A1] hover:text-blue-700"
+                      onClick={() => {
+                        setCurrentPaymentId(payment.id);
+                        setFormData({
+                          amount: payment.amount,
+                          paymentMethod: payment.paymentMethod,
+                          notes: payment.notes || "",
+                          date: payment.paidOn,
+                        });
+                        setShowModal(true);
+                      }}
                     >
-                      <option value="Paid">Paid</option>
-                      <option value="Unpaid">Unpaid</option>
-                    </select>
-                    {payment.status === "Paid" && (
-                      <>
-                        <button
-                          className="text-[#1652A1] hover:text-blue-700"
-                          onClick={() => {
-                            setCurrentPaymentId(payment.id);
-                            setFormData({
-                              amount: payment.amount,
-                              paymentMethod: payment.paymentMethod,
-                              notes: payment.notes || "",
-                              date: payment.paidOn,
-                            });
-                            setShowModal(true);
-                          }}
-                        >
-                          <FaEdit className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => generateInvoicePDF(payment)}
-                        >
-                          <FaFilePdf className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
+                      <FaEdit className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => generateInvoicePDF(payment)}
+                    >
+                      <FaFilePdf className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="9" // ✅ Updated colspan to match new column count
                   className="text-center py-3 md:py-4 text-gray-500 text-sm md:text-md"
                 >
                   No payment records found.
@@ -272,104 +266,6 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
             )}
           </tbody>
         </table>
-
-        {/* Mobile Card Layout */}
-        <div className="md:hidden divide-y divide-gray-200">
-          {filteredPayments.length > 0 ? (
-            filteredPayments.map((payment) => (
-              <div key={payment.id} className="p-1 bg-white">
-                <div className="flex flex-col gap-2 text-md">
-                  <div>
-                    <span className="font-medium text-[#1652A1]">
-                      Tenant Name:
-                    </span>{" "}
-                    {payment.tenantName}
-                  </div>
-                  <div>
-                    <span className="font-medium text-[#1652A1]">Amount:</span>{" "}
-                    <span className="font-semibold">{payment.amount}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-[#1652A1]">
-                      Invoice Month:
-                    </span>{" "}
-                    {payment.invoiceMonth}
-                  </div>
-                  <div>
-                    <span className="font-medium text-[#1652A1]">
-                      Invoice Type:
-                    </span>{" "}
-                    {payment.invoiceType}
-                  </div>
-                  <div>
-                    <span className="font-medium text-[#1652A1]">Status:</span>{" "}
-                    <span
-                      className={`px-1 py-0.5 rounded-full text-xs font-semibold ${
-                        paymentStatusColors[payment.status]
-                      }`}
-                    >
-                      {payment.status}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-[#1652A1]">Paid On:</span>{" "}
-                    {payment.paidOn}
-                  </div>
-                  <div>
-                    <span className="font-medium text-[#1652A1]">
-                      Payment Method:
-                    </span>{" "}
-                    {payment.paymentMethod}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[#1652A1]">
-                      Update Status:
-                    </span>
-                    <select
-                      value={payment.status}
-                      onChange={(e) =>
-                        handleStatusChange(payment.id, e.target.value)
-                      }
-                      className="p-1 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="Paid">Paid</option>
-                      <option value="Unpaid">Unpaid</option>
-                    </select>
-                    {payment.status === "Paid" && (
-                      <div className="flex items-center gap-2">
-                        <button
-                          className="text-blue-500 hover:text-blue-700"
-                          onClick={() => {
-                            setCurrentPaymentId(payment.id);
-                            setFormData({
-                              amount: payment.amount,
-                              paymentMethod: payment.paymentMethod,
-                              notes: payment.notes || "",
-                              date: payment.paidOn,
-                            });
-                            setShowModal(true);
-                          }}
-                        >
-                          <FaEdit className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => generateInvoicePDF(payment)}
-                        >
-                          <FaFilePdf className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-3 text-center text-gray-500 text-sm">
-              No payment records found.
-            </div>
-          )}
-        </div>
 
         {/* Modal */}
         {showModal && (
@@ -421,6 +317,25 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
                     setFormData({ ...formData, paymentMethod: e.target.value })
                   }
                 />
+              </div>
+
+              {/* ✅ New Payment Mode Dropdown */}
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Payment Mode
+                </label>
+                <select
+                  className="w-full p-2 border rounded text-sm"
+                  value={formData.paymentMode || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, paymentMode: e.target.value })
+                  }
+                >
+                  <option value="">Select payment mode</option>
+                  <option value="Full">Full Payment</option>
+                  <option value="Split">Split Payment</option>
+                  <option value="Partial">Partial Payment</option>
+                </select>
               </div>
 
               <div className="mb-4">

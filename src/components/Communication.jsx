@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
-import { FaReply } from "react-icons/fa";
 import api from "../Pages/utils/axios"; 
-
+import SendMessage from "./SendMessage";
 const Communication = () => {
   const [openId, setOpenId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -275,7 +274,6 @@ const Communication = () => {
                           onClick={(e) => toggleReplyForm(msg.id, e)}
                           className="flex items-center gap-0.5 md:gap-1 px-1 py-0.5 md:px-2 md:py-1 text-xs bg-[#004C86] text-white rounded hover:bg-[#005fa6] transition-colors"
                         >
-                          <FaReply size={5} className="md:h-5 md:w-5" />
                           Reply
                         </button>
                         {openId === msg.id ? (
@@ -319,7 +317,6 @@ const Communication = () => {
                                   onClick={() => handleReplySubmit(msg.id)}
                                   className="bg-[#004C86] text-white px-3 py-1.5 md:px-4 md:py-2 rounded hover:bg-[#005fa6] transition-colors flex items-center gap-1 md:gap-2 text-xs md:text-sm"
                                 >
-                                  <FaReply size={5} className="md:h-5 md:w-5" />
                                   Send Reply
                                 </button>
                                 <button
@@ -420,7 +417,6 @@ const Communication = () => {
                         onClick={(e) => toggleReplyForm(msg.id, e)}
                         className="flex items-center gap-0.5 px-1 py-0.5 text-md bg-[#004C86] text-white rounded hover:bg-[#005fa6] transition-colors"
                       >
-                        <FaReply size={14} />
                         Reply
                       </button>
                       {openId === msg.id ? (
@@ -463,7 +459,6 @@ const Communication = () => {
                               onClick={() => handleReplySubmit(msg.id)}
                               className="bg-[#004C86] text-white px-3 py-1.5 rounded hover:bg-[#005fa6] transition-colors flex items-center gap-2 text-xs"
                             >
-                              <FaReply size={12} />
                               Send Reply
                             </button>
                             <button
@@ -489,6 +484,8 @@ const Communication = () => {
           </div>
         </div>
       </div>
+
+      <SendMessage/>
     </div>
   );
 };
