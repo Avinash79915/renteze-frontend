@@ -1,63 +1,73 @@
 import React, { useState, useEffect } from "react";
-import { User, Home, MapPin, Users } from "lucide-react";
-import axios from "axios";
-import AddUnitForm from "../SuperAdminComponent/AddUnitForm";
+import { User, Home, MapPin, Users, Save, X } from "lucide-react";
 import { FaRegEdit } from "react-icons/fa";
 import { MdOutlineDeleteForever } from "react-icons/md";
+import { HiOutlineUserAdd } from "react-icons/hi";
 import api from "../../Pages/utils/axios";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useForm } from "react-hook-form";
+import AddUnitForm from "../SuperAdminComponent/AddUnitForm";
 
 const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
   const [units, setUnits] = useState([]);
   const [loadingUnits, setLoadingUnits] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [editingUnit, setEditingUnit] = useState(null);
+  const [showAddTenantForm, setShowAddTenantForm] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState(null);
+
+  const { user, isAuthenticated, isLoading } = useAuth0();
+  const email = user?.email;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      rent: "",
+      advance: "", 
+      annualIncrement: "", 
+      agreementStartDate: "",
+      agreementEndDate: "",
+    },
+  });
 
   if (!property) return null;
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const email = user?.email;
   useEffect(() => {
     const fetchUnits = async () => {
       setLoadingUnits(true);
-
-      const user = JSON.parse(localStorage.getItem("user"));
-      const email = user?.email;
-
       try {
         const response = await api.get(`/unit/property/${property._id}`, {
           params: { testEmail: email },
         });
-
         setUnits(response.data.units || []);
         setFetchError(null);
       } catch (error) {
-        console.error(
-          "Error fetching units:",
-          error.response?.data || error.message
-        );
+        console.error("Error fetching units:", error.response?.data || error.message);
         setFetchError("Failed to load units. Please try again later.");
       } finally {
         setLoadingUnits(false);
       }
     };
 
-    if (property?._id) fetchUnits();
-  }, [property?._id]);
+    if (property?._id && email) fetchUnits();
+  }, [property?._id, email]);
 
   const reloadUnits = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const email = user?.email;
-
     try {
       const response = await api.get(`/unit/property/${property._id}`, {
         params: { testEmail: email },
       });
       setUnits(response.data.units || []);
     } catch (error) {
-      console.error(
-        "Error reloading units:",
-        error.response?.data || error.message
-      );
+      console.error("Error reloading units:", error.response?.data || error.message);
       setFetchError("Failed to reload units after update. Please refresh.");
     }
   };
@@ -70,21 +80,12 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
   const handleDeleteUnit = async (unitId) => {
     if (!window.confirm("Are you sure you want to delete this unit?")) return;
 
-    const user = JSON.parse(localStorage.getItem("user"));
-    const email = user?.email;
-
     try {
-      await api.delete(
-        `/unit/${unitId}`,
-        { params: { testEmail: email } }
-      );
+      await api.delete(`/unit/${unitId}`, { params: { testEmail: email } });
       alert("Unit deleted successfully!");
       reloadUnits();
     } catch (error) {
-      console.error(
-        "Error deleting unit:",
-        error.response?.data || error.message
-      );
+      console.error("Error deleting unit:", error.response?.data || error.message);
       alert("Failed to delete unit. Please try again.");
     }
   };
@@ -93,6 +94,51 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
     setShowAddUnitForm(false);
     setEditingUnit(null);
     await reloadUnits();
+  };
+
+  const handleAddTenant = (unit) => {
+    setSelectedUnit(unit);
+    setShowAddTenantForm(true);
+    reset({
+      name: "",
+      email: "",
+      phone: "",
+      rent: unit.rentCost || "",
+      advance: "",
+      annualIncrement: "",
+      agreementStartDate: "",
+      agreementEndDate: "",
+    });
+  };
+
+  const onSubmitTenant = async (data) => {
+    try {
+      const payload = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        unit: selectedUnit._id,
+        rent: data.rent,
+        advance: data.advance,
+        annualIncrement: data.annualIncrement,
+        agreementStartDate: data.agreementStartDate,
+        agreementEndDate: data.agreementEndDate,
+      };
+
+      await api.post(`/property/${property._id}/tenant`, payload, {
+        params: { testEmail: email },
+        headers: { "Content-Type": "application/json" },
+      });
+
+      alert("Tenant added successfully!");
+      setShowAddTenantForm(false);
+      reset();
+      setSelectedUnit(null);
+      reloadUnits();
+    } catch (error) {
+      console.error("Error adding tenant:", error.response?.data || error.message);
+      alert("Failed to add tenant: " + (error.response?.data?.message || "Please try again."));
+    }
   };
 
   return (
@@ -107,6 +153,208 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
             setEditingUnit(null);
           }}
         />
+      )}
+
+      {showAddTenantForm && selectedUnit && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          {/* Overlay with blur and semi-transparent black */}
+          <div
+           className="fixed inset-0 backdrop-blur-md bg-black/30"
+            onClick={() => {
+              setShowAddTenantForm(false);
+              setSelectedUnit(null);
+              reset();
+            }}
+          ></div>
+          {/* Popup form */}
+          <div className="relative bg-white rounded-lg border border-gray-200 w-full max-w-2xl mx-4 shadow-xl max-h-[80vh] overflow-y-auto">
+            <div className="p-3 md:p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold text-[#1652A1]">
+                  Add Tenant for Unit {selectedUnit.roomId || "N/A"}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowAddTenantForm(false);
+                    setSelectedUnit(null);
+                    reset();
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <form className="p-2 md:p-6" onSubmit={handleSubmit(onSubmitTenant)}>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tenant Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      {...register("name", {
+                        required: "Name is required",
+                        minLength: {
+                          value: 2,
+                          message: "Name must be at least 2 characters",
+                        },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                      autoFocus
+                    />
+                    {errors.name && (
+                      <p className="text-red-500 text-sm">{errors.name.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      {...register("email", {
+                        required: "Email is required",
+                        pattern: {
+                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message: "Invalid email address",
+                        },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm">{errors.email.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      {...register("phone", {
+                        required: "Phone is required",
+                        pattern: {
+                          value: /^[0-9]{10}$/,
+                          message: "Phone number must be 10 digits",
+                        },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.phone && (
+                      <p className="text-red-500 text-sm">{errors.phone.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Monthly Rent <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      {...register("rent", {
+                        required: "Rent is required",
+                        min: { value: 1, message: "Rent must be greater than 0" },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.rent && (
+                      <p className="text-red-500 text-sm">{errors.rent.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Advance <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      {...register("advance", {
+                        required: "Advance is required",
+                        min: { value: 0, message: "Advance cannot be negative" },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.advance && (
+                      <p className="text-red-500 text-sm">{errors.advance.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Annual Increment (%) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      {...register("annualIncrement", {
+                        required: "Annual increment is required",
+                        min: { value: 0, message: "Annual increment cannot be negative" },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.annualIncrement && (
+                      <p className="text-red-500 text-sm">{errors.annualIncrement.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Agreement Start Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      {...register("agreementStartDate", {
+                        required: "Start date is required",
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.agreementStartDate && (
+                      <p className="text-red-500 text-sm">{errors.agreementStartDate.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Agreement End Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      {...register("agreementEndDate", {
+                        required: "End date is required",
+                        validate: (value) =>
+                          value > watch("agreementStartDate") ||
+                          "End date must be after start date",
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.agreementEndDate && (
+                      <p className="text-red-500 text-sm">{errors.agreementEndDate.message}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-2 md:p-6 border-t border-gray-200">
+                <div className="flex justify-end gapsm-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddTenantForm(false);
+                      setSelectedUnit(null);
+                      reset();
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-[#1652A1] text-white rounded-lg hover:bg-[#134a8e] flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    Add Tenant
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Property Header */}
@@ -152,10 +400,7 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
             </div>
             <div>
               <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-                {
-                  units.filter((unit) => unit.occupancyStatus === "Occupied")
-                    .length
-                }
+                {units.filter((unit) => unit.occupancyStatus === "Occupied").length}
               </p>
               <p className="text-sm sm:text-base text-gray-600">Occupied</p>
             </div>
@@ -168,10 +413,7 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
             </div>
             <div>
               <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-                {
-                  units.filter((unit) => unit.occupancyStatus === "Vacant")
-                    .length
-                }
+                {units.filter((unit) => unit.occupancyStatus === "Vacant").length}
               </p>
               <p className="text-sm sm:text-base text-gray-600">Vacant</p>
             </div>
@@ -228,17 +470,17 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
                     </td>
                     <td className="px-6 py-4 flex gap-2">
                       <FaRegEdit
-                        className="text-blue-600 hover:underline h-5 w-5"
+                        className="text-blue-600 hover:underline h-5 w-5 cursor-pointer"
                         onClick={() => handleEditUnit(unit)}
-                      >
-                        Edit
-                      </FaRegEdit>
+                      />
                       <MdOutlineDeleteForever
-                        className="text-red-600 hover:underline h-5 w-5"
+                        className="text-red-600 hover:underline h-5 w-5 cursor-pointer"
                         onClick={() => handleDeleteUnit(unit._id)}
-                      >
-                        Delete
-                      </MdOutlineDeleteForever>
+                      />
+                      <HiOutlineUserAdd
+                        className="text-green-600 hover:underline h-5 w-5 cursor-pointer"
+                        onClick={() => handleAddTenant(unit)}
+                      />
                     </td>
                   </tr>
                 ))}

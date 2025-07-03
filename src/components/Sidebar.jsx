@@ -1,16 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth0 } from "@auth0/auth0-react"; // ✅ Add this
 import { sidebarItemsByRole } from "../config/sidebarConfig";
 import logo from "../assets/white-logo.svg";
+import api from "../Pages/utils/axios";
 
-const Sidebar = ({ activeSection, setActiveSection, role }) => {
+const Sidebar = ({ activeSection, setActiveSection }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [role, setRole] = useState("guest"); // default guest
+  const { user, isAuthenticated, isLoading } = useAuth0(); // ✅ get user from Auth0
+
   const items = sidebarItemsByRole[role] || [];
 
-  console.log("Sidebar - Current role:", role);
+  useEffect(() => {
+    const fetchRole = async () => {
+      if (!isAuthenticated || isLoading) return; // wait until Auth0 finishes loading
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+      const email = user?.email;
+      if (!email) {
+        console.log("Sidebar: No authenticated user, using guest role");
+        setRole("guest");
+        return;
+      }
+
+      try {
+        const res = await api.get(`/dashboard?testEmail=${email}`);
+        const fetchedRole = res.data.role;
+        console.log("Sidebar - Full response:", res.data); // 👈 ye add karo
+        setRole(fetchedRole || "guest");
+      } catch (err) {
+        console.error("Sidebar - Failed to fetch user role:", err);
+        setRole("guest");
+      }
+    };
+
+    fetchRole();
+  }, [isAuthenticated, isLoading, user]); // dependencies updated
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
   const handleItemClick = (itemKey) => {
     setActiveSection(itemKey);
@@ -21,7 +47,7 @@ const Sidebar = ({ activeSection, setActiveSection, role }) => {
     <>
       <button
         onClick={toggleMobileMenu}
-        className="md:hidden fixed top-2 left-2 z-50 p-2 text-[#004C86] "
+        className="md:hidden fixed top-2 left-2 z-50 p-2 text-[#004C86]"
       >
         <svg
           className="w-6 h-6"
@@ -38,7 +64,6 @@ const Sidebar = ({ activeSection, setActiveSection, role }) => {
         </svg>
       </button>
 
-      {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
           className="md:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-20"
@@ -46,7 +71,6 @@ const Sidebar = ({ activeSection, setActiveSection, role }) => {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`w-80 bg-[#004C86] text-white h-screen fixed top-0 left-0 overflow-hidden py-20 pl-8 z-10 md:z-10 transition-transform duration-300 ease-in-out ${
           isMobileMenuOpen
@@ -54,7 +78,6 @@ const Sidebar = ({ activeSection, setActiveSection, role }) => {
             : "-translate-x-full md:translate-x-0"
         }`}
       >
-        {/* Close Button for Mobile */}
         <button
           onClick={toggleMobileMenu}
           className="md:hidden absolute top-4 right-4 p-2 text-white"
@@ -74,7 +97,7 @@ const Sidebar = ({ activeSection, setActiveSection, role }) => {
           </svg>
         </button>
 
-        <div className="md:mb-15 mb-10 flex flex-col pr-12 justify-cenrter">
+        <div className="md:mb-15 mb-10 flex flex-col pr-12 justify-center">
           <img src={logo} alt="Renteze Logo" className="md:h-25 h-20" />
         </div>
 

@@ -4,6 +4,7 @@ import PropertyDetails from "./TenantPropertyDetails";
 import property1 from "../assets/property-1.jpg";
 
 import api from "../Pages/utils/axios"; 
+import { useAuth0 } from "@auth0/auth0-react";
 
 import {
   FiUser,
@@ -67,7 +68,7 @@ const TenantHome = () => {
       <p className="text-sm text-slate-400">N/A</p>
     );
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user, isAuthenticated, isLoading } = useAuth0();
   const email = user?.email;
 
   useEffect(() => {
@@ -235,41 +236,7 @@ const TenantHome = () => {
           </InfoCard>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-6">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-lg font-semibold text-slate-800 mb-4">
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg">
-                <FiFileText className="w-5 h-5 text-[#1652A1]" />
-                <span className="text-sm font-medium text-blue-800">
-                  View Reports
-                </span>
-              </button>
-              <button className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg">
-                <FiDollarSign className="w-5 h-5 text-[#1652A1]" />
-                <span className="text-sm font-medium text-[#1652A1]">
-                  Pay Rent
-                </span>
-              </button>
-              <button className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg">
-                <FiSettings className="w-5 h-5 text-[#1652A1]" />
-                <span className="text-sm font-medium text-[#1652A1]">
-                  Maintenance
-                </span>
-              </button>
-              <button className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg">
-                <FiPhone className="w-5 h-5 text-[#1652A1]" />
-                <span className="text-sm font-medium text-[#1652A1]">
-                  Contact Support
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-
+       
         {/* My Property */}
         <div className="mt-6">
           <InfoCard icon={FiHome} title="My Property" className="w-full">

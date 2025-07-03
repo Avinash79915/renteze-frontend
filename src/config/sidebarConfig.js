@@ -19,7 +19,7 @@ export const sidebarItemsByRole = {
     { key: "communication", label: "Communication", icon: reportIcon },
   ],
 
-  admin: [
+  owner: [
     { key: "dashboard", label: "Dashboard", icon: adminIcon },
     { key: "property", label: "Property List", icon: propertyIcon },
     { key: "tenant", label: "Tenant Management", icon: tenantIcon },

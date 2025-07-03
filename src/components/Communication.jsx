@@ -3,6 +3,8 @@ import axios from "axios";
 import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
 import api from "../Pages/utils/axios"; 
 import SendMessage from "./SendMessage";
+import { useAuth0 } from "@auth0/auth0-react";
+
 const Communication = () => {
   const [openId, setOpenId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -11,7 +13,7 @@ const Communication = () => {
   const [priorityFilter, setPriorityFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user, isAuthenticated, isLoading } = useAuth0();
   const email = user?.email;
   useEffect(() => {
     const fetchIssues = async () => {

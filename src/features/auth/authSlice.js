@@ -1,11 +1,13 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { users } from "./HardcodedUsers";
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+
+// REMOVE THIS: import { users } from "./HardcodedUsers";
+
+// Signup thunk (keep only if your backend supports custom signup; otherwise you can remove)
 export const signup = createAsyncThunk(
   "auth/signup",
   async (formData, { rejectWithValue }) => {
     try {
-      // Replace with your API call, e.g., axios.post("/api/signup", formData)
+      // Replace with your real signup API call
       const response = await new Promise((resolve) =>
         setTimeout(() => resolve({ data: formData }), 2000)
       );
@@ -16,11 +18,12 @@ export const signup = createAsyncThunk(
   }
 );
 
+// Forgot password thunk (keep only if your backend supports password reset)
 export const forgotPassword = createAsyncThunk(
   "auth/forgotPassword",
   async ({ email }, { rejectWithValue }) => {
     try {
-      // Replace with your API call, e.g., axios.post("/api/forgot-password", { email })
+      // Replace with your real forgot password API call
       const response = await new Promise((resolve) =>
         setTimeout(() => resolve({ data: { message: "Reset link sent" } }), 2000)
       );
@@ -30,22 +33,8 @@ export const forgotPassword = createAsyncThunk(
     }
   }
 );
-// In authSlice extraReducers
-extraReducers: (builder) => {
-  builder
-    .addCase(signup.pending, (state) => {
-      state.isLoading = true;
-      state.error = null;
-    })
-    .addCase(signup.fulfilled, (state, action) => {
-      state.isLoading = false;
-    })
-    .addCase(signup.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-    });
-};
-// Safe localStorage getter with error handling
+
+// Safe localStorage helpers
 const getStoredUser = () => {
   try {
     const storedUser = localStorage.getItem("user");
@@ -57,7 +46,6 @@ const getStoredUser = () => {
   }
 };
 
-// Safe localStorage setter
 const setStoredUser = (user) => {
   try {
     localStorage.setItem("user", JSON.stringify(user));
@@ -66,7 +54,6 @@ const setStoredUser = (user) => {
   }
 };
 
-// Clear all auth-related localStorage items
 const clearAuthStorage = () => {
   try {
     localStorage.removeItem("user");
@@ -101,63 +88,27 @@ const authSlice = createSlice({
       state.error = null;
     },
 
-    login: (state, action) => {
-      const { username, password } = action.payload;
+    // NEW reducer: store Auth0 user info
+    setAuth0User: (state, action) => {
+      state.user = action.payload;
+      state.isAuthenticated = !!action.payload;
+      state.error = null;
+      state.isLoading = false;
+      state.lastLoginTime = action.payload ? new Date().toISOString() : null;
 
-      if (!username || !password) {
-        state.error = "Username and password are required";
-        state.isLoading = false;
-        return;
-      }
-
-      if (username.trim().length < 3) {
-        state.error = "Username must be at least 3 characters long";
-        state.isLoading = false;
-        return;
-      }
-
-      if (password.length < 4) {
-        state.error = "Password must be at least 4 characters long";
-        state.isLoading = false;
-        return;
-      }
-
-      // Find user
-      const foundUser = users.find(
-        (u) => u.username.toLowerCase() === username.toLowerCase().trim() && 
-               u.password === password
-      );
-
-      if (foundUser) {
-        const userWithLoginInfo = {
-          ...foundUser,
-          lastLoginTime: new Date().toISOString(),
-          loginCount: (foundUser.loginCount || 0) + 1,
-        };
-
-        state.user = userWithLoginInfo;
-        state.isAuthenticated = true;
-        state.error = null;
-        state.isLoading = false;
-        state.lastLoginTime = userWithLoginInfo.lastLoginTime;
-
-        setStoredUser(userWithLoginInfo);
+      if (action.payload) {
+        setStoredUser(action.payload);
       } else {
-        state.user = null;
-        state.isAuthenticated = false;
-        state.error = "Invalid username or password";
-        state.isLoading = false;
+        clearAuthStorage();
       }
     },
 
-    
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;
       state.isLoading = false;
       state.lastLoginTime = null;
-
       clearAuthStorage();
     },
 
@@ -167,7 +118,6 @@ const authSlice = createSlice({
       state.error = action.payload?.reason || "Session expired";
       state.isLoading = false;
       state.lastLoginTime = null;
-
       clearAuthStorage();
     },
 
@@ -177,40 +127,6 @@ const authSlice = createSlice({
         state.user = updatedUser;
         setStoredUser(updatedUser);
       }
-    },
-
-    changePassword: (state, action) => {
-      const { currentPassword, newPassword } = action.payload;
-
-      if (!state.user) {
-        state.error = "User not authenticated";
-        return;
-      }
-
-      if (!currentPassword || !newPassword) {
-        state.error = "Current password and new password are required";
-        return;
-      }
-
-      if (state.user.password !== currentPassword) {
-        state.error = "Current password is incorrect";
-        return;
-      }
-
-      if (newPassword.length < 4) {
-        state.error = "New password must be at least 4 characters long";
-        return;
-      }
-
-      if (currentPassword === newPassword) {
-        state.error = "New password must be different from current password";
-        return;
-      }
-
-      const updatedUser = { ...state.user, password: newPassword };
-      state.user = updatedUser;
-      state.error = null;
-      setStoredUser(updatedUser);
     },
 
     refreshUserData: (state) => {
@@ -226,14 +142,12 @@ const authSlice = createSlice({
       }
     },
 
-    // Set user role (if needed)
     setUserRole: (state, action) => {
       if (state.user) {
         const updatedUser = { ...state.user, role: action.payload };
         state.user = updatedUser;
         setStoredUser(updatedUser);
-        
-        // Also store role separately if needed
+
         try {
           localStorage.setItem("userRole", action.payload);
         } catch (error) {
@@ -242,7 +156,6 @@ const authSlice = createSlice({
       }
     },
 
-    // Reset auth state (useful for testing)
     resetAuthState: (state) => {
       state.user = null;
       state.isAuthenticated = false;
@@ -252,16 +165,41 @@ const authSlice = createSlice({
       clearAuthStorage();
     },
   },
+
+  extraReducers: (builder) => {
+    builder
+      .addCase(signup.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(signup.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(signup.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(forgotPassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      });
+  },
 });
 
 export const {
   setLoading,
   clearError,
-  login,
+  setAuth0User,
   logout,
   forceLogout,
   updateUserProfile,
-  changePassword,
   refreshUserData,
   setUserRole,
   resetAuthState,

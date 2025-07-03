@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../Pages/utils/axios";
 import { FaPaperPlane } from "react-icons/fa";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const SendMessage = () => {
   const [formData, setFormData] = useState({
@@ -12,7 +13,7 @@ const SendMessage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const user = JSON.parse(localStorage.getItem("user"));
+const { user, isAuthenticated } = useAuth0();
   const senderEmail = user?.email;
 
   useEffect(() => {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import property1 from "../../assets/property-1.jpg";
-import api from "../../Pages/utils/axios"; 
+import api from "../../Pages/utils/axios";
+import { useAuth0 } from "@auth0/auth0-react";
 
 import {
   House,
@@ -22,21 +23,21 @@ const AdminDashboard = ({
   setActiveProperty = () => {},
 }) => {
   const [dashboardData, setDashboardData] = useState(null);
-  const user = JSON.parse(localStorage.getItem("user"));
-  const email = user?.email;
+  const { user, isAuthenticated, isLoading } = useAuth0();
+  const email = user?.email; 
 
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const response = await api.get(`/dashboard?testEmail=${email}`);
-      setDashboardData(response.data);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    }
-  };
+    const fetchData = async () => {
+      try {
+        const response = await api.get(`/dashboard?testEmail=${email}`);
+        setDashboardData(response.data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
 
-  fetchData();
-}, [email]);
+    fetchData();
+  }, [email]);
 
   if (!dashboardData) {
     return <div className="p-6">Loading dashboard data...</div>;
@@ -121,7 +122,7 @@ const AdminDashboard = ({
           <h1 className="text-3xl font-bold text-[#1652A1]">Admin Dashboard</h1>
           <p className="text-gray-600 mt-1">
             Welcome back, {dashboardData.name}! Here's what's happening with
-            your properties.
+            your properties .
           </p>
         </div>
       </div>

@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import IssueForm from "./TenantComponents/IssueForm";
 import QueryForm from "./TenantComponents/QueryForm";
 import api from "../Pages/utils/axios";
+import { useAuth0 } from "@auth0/auth0-react"; 
 
 const TenantCommunication = () => {
   const [activeTab, setActiveTab] = useState("issue");
   const [issues, setIssues] = useState([]);
   const [queries, setQueries] = useState([]);
-  const [messages, setMessages] = useState([]); // ✅ fetched messages
-  const [error, setError] = useState(""); // ✅ error state
+  const [messages, setMessages] = useState([]);
+  const [error, setError] = useState("");
 
   const [issueData, setIssueData] = useState({
     title: "",
@@ -21,27 +22,29 @@ const TenantCommunication = () => {
     description: "",
   });
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const userEmail = user?.email;
-  console.log("Logged-in user email:", userEmail);
+  const { user, isAuthenticated, isLoading } = useAuth0(); 
+  const userEmail = user?.email; 
+
+  console.log("Logged-in user email (Auth0):", userEmail);
 
   useEffect(() => {
     const fetchMessages = async () => {
-  try {
-    if (!userEmail) {
-      setError("User not logged in. Please log in to see your messages.");
-      return;
-    }
+      try {
+        if (!userEmail) {
+          setError("User not logged in. Please log in to see your messages.");
+          return;
+        }
 
-    const res = await api.get(`/messages/user?email=${encodeURIComponent(userEmail)}`); // ✅ fixed
-    setMessages(res.data); // ✅ fixed
-    setError("");
-  } catch (err) {
-    console.error("Failed to fetch messages:", err);
-    setError(err.response?.data?.error || "Failed to load messages.");
-  }
-};
-
+        const res = await api.get(
+          `/messages/user?email=${encodeURIComponent(userEmail)}`
+        );
+        setMessages(res.data);
+        setError("");
+      } catch (err) {
+        console.error("Failed to fetch messages:", err);
+        setError(err.response?.data?.error || "Failed to load messages.");
+      }
+    };
 
     fetchMessages();
   }, [userEmail]);

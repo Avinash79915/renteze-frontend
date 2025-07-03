@@ -1,40 +1,74 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAuth0 } from "@auth0/auth0-react";
+import api from "../Pages/utils/axios";
+
 const Home = () => {
-   const navigate = useNavigate();
-  const user = useSelector((state) => state.auth.user); // get logged-in user
+  const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading } = useAuth0();
 
   useEffect(() => {
-    if (user?.role === "superadmin") {
-      navigate("/superadmin/home");
-    } else if (user?.role === "admin") {
-      navigate("/admin/home");
-    } else if (user?.role === "tenant") {
-      navigate("/tenant/home");
+  const checkUserAndRedirect = async () => {
+    if (!user?.email) return;
+
+    try {
+      const response = await api.get(`/api/auth/check-user?email=${user.email}`);
+      const data = response.data;
+
+      if (data.redirect) {
+        navigate(data.redirect);
+      } else if (data.role) {
+        switch (data.role) {
+          case "superadmin":
+            navigate("/superadmin/home");
+            break;
+          case "admin":
+            navigate("/admin/home");
+            break;
+          case "tenant":
+            navigate("/tenant/home");
+            break;
+          case "owner":
+            navigate("/admin/home");
+            break;
+          default:
+            navigate("/");
+        }
+      } else {
+        navigate("/complete-profile");
+      }
+    } catch (error) {
+      console.error("Failed to check user role:", error);
+      navigate("/error");
     }
-  }, [user, navigate]);
+  };
+
+  if (isAuthenticated && !isLoading) {
+    checkUserAndRedirect();
+  }
+}, [isAuthenticated, isLoading, user, navigate]);
+
+
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center  justify-center">
-      {/* Hero Section */}
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
       <div className="flex flex-row items-center justify-center px-1 py-15 lg:py-24 text-center max-w-7xl">
-        <div className=" mx-auto">
+        <div className="mx-auto">
           <h1 className="text-3xl md:text-5xl lg:text-5xl font-light text-gray-900 mb-6 leading-tight">
             Welcome to <span className="text-[#004C86]">Renteze</span>
           </h1>
-          
-          <p className="text-md md:text-md text-gray-600 mb-12 leading-relaxed  text-center ">
-            Comprehensive rental property management platform designed to simplify, 
+
+          <p className="text-md md:text-md text-gray-600 mb-12 leading-relaxed text-center">
+            Comprehensive rental property management platform designed to simplify,
             automate, and streamline rental operations
           </p>
 
-          <div className="bg-white  rounded-2xl p-3 mb-12 border border-gray-200 shadow-lg">
+          <div className="bg-white rounded-2xl p-3 mb-12 border border-gray-200 shadow-lg">
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">
               Built for Everyone in the Rental Ecosystem
             </h2>
-            
-            <div className="grid md:grid-cols-3 gap-6 text-left  ">
+
+            <div className="grid md:grid-cols-3 gap-6 text-left">
               <div className="bg-blue-50 rounded-lg p-6 border border-blue-100 hover:shadow-md transition-shadow">
                 <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,7 +78,7 @@ const Home = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Landlords</h3>
                 <p className="text-gray-600 text-sm">Manage multiple properties and units with ease</p>
               </div>
-              
+
               <div className="bg-green-50 rounded-lg p-6 border border-green-100 hover:shadow-md transition-shadow">
                 <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +88,7 @@ const Home = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Property Managers</h3>
                 <p className="text-gray-600 text-sm">Streamline operations with powerful admin tools</p>
               </div>
-              
+
               <div className="bg-purple-50 rounded-lg p-6 border border-purple-100 hover:shadow-md transition-shadow">
                 <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,50 +101,33 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Key Features */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <div className="text-center bg-white p-6 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Financial Management</h3>
-              <p className="text-gray-600 text-sm">Complete payment tracking and contract management</p>
-            </div>
-            
-            <div className="text-center bg-white p-6 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Automation</h3>
-              <p className="text-gray-600 text-sm">Streamline repetitive tasks and workflows</p>
-            </div>
-            
-            <div className="text-center bg-white p-6 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure Access</h3>
-              <p className="text-gray-600 text-sm">Role-based permissions and data security</p>
-            </div>
-            
-            <div className="text-center bg-white p-6 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Full Visibility</h3>
-              <p className="text-gray-600 text-sm">End-to-end operational insights and reporting</p>
-            </div>
+            <FeatureCard
+              color="indigo"
+              title="Financial Management"
+              description="Complete payment tracking and contract management"
+              iconPath="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2..."
+            />
+            <FeatureCard
+              color="orange"
+              title="Automation"
+              description="Streamline repetitive tasks and workflows"
+              iconPath="M13 10V3L4 14h7v7l9-11h-7z"
+            />
+            <FeatureCard
+              color="green"
+              title="Secure Access"
+              description="Role-based permissions and data security"
+              iconPath="M9 12l2 2 4-4..."
+            />
+            <FeatureCard
+              color="blue"
+              title="Full Visibility"
+              description="End-to-end operational insights and reporting"
+              iconPath="M7 12l3-3 3 3 4-4..."
+            />
           </div>
 
-          {/* CTA Section */}
           <div className="bg-gradient-to-r from-[#004C86] to-[#1652A1] rounded-2xl p-3 border shadow-xl">
             <h2 className="text-xl md:text-3xl font-light text-white mb-4">
               Ready to Transform Your Rental Management?
@@ -118,15 +135,15 @@ const Home = () => {
             <p className="text-blue-100 mb-8 text-md">
               Join thousands of property managers who trust Renteze for their rental operations
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-               <button
-            onClick={() => navigate("/signup")}
-            className="px-8 py-4 bg-white text-blue-900 rounded-lg hover:bg-gray-100 transition-all duration-200 font-light text-md shadow-lg"
-          >
-            Sign Up Free
-          </button>
-              <button className="px-8 py-4 border-2 border-white text-white rounded-lg hover:bg-white hover:text-blue-900 transition-all duration-200 font-light text-md ">
+              <button
+                onClick={() => navigate("/signup")}
+                className="px-8 py-4 bg-white text-blue-900 rounded-lg hover:bg-gray-100 transition-all duration-200 font-light text-md shadow-lg"
+              >
+                Sign Up Free
+              </button>
+              <button className="px-8 py-4 border-2 border-white text-white rounded-lg hover:bg-white hover:text-blue-900 transition-all duration-200 font-light text-md">
                 Learn More
               </button>
             </div>
@@ -136,5 +153,18 @@ const Home = () => {
     </div>
   );
 };
+
+// Small component for repeated feature cards
+const FeatureCard = ({ color, title, description, iconPath }) => (
+  <div className="text-center bg-white p-6 rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
+    <div className={`w-16 h-16 bg-${color}-100 rounded-full flex items-center justify-center mx-auto mb-4`}>
+      <svg className={`w-8 h-8 text-${color}-600`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={iconPath} />
+      </svg>
+    </div>
+    <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+    <p className="text-gray-600 text-sm">{description}</p>
+  </div>
+);
 
 export default Home;

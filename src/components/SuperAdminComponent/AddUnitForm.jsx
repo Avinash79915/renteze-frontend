@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Home } from "lucide-react";
 import api from "../../Pages/utils/axios";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const AddUnitForm = ({ property, existingUnit, onSave, onCancel }) => {
   const [newUnit, setNewUnit] = useState({
@@ -17,11 +18,14 @@ const AddUnitForm = ({ property, existingUnit, onSave, onCancel }) => {
     occupancyStatus: "Vacant",
   });
 
+  const { user, isAuthenticated, isLoading } = useAuth0(); 
+  const email = user?.email;
+
   useEffect(() => {
     if (existingUnit) {
       setNewUnit({
         unitNumber: existingUnit.roomId || "",
-        unitType: existingUnit.unitType || "Apartment", // ✅ default to valid option
+        unitType: existingUnit.unitType || "Apartment",
         floorNumber: existingUnit.floor?.toString() || "",
         area: existingUnit.roomArea || "",
         bedrooms: existingUnit.bedrooms || "",
@@ -53,16 +57,13 @@ const AddUnitForm = ({ property, existingUnit, onSave, onCancel }) => {
       occupancyStatus: newUnit.occupancyStatus,
     };
 
-    const user = JSON.parse(localStorage.getItem("user"));
-    const email = user?.email;
-
     try {
       let response;
       if (existingUnit) {
         response = await api.patch(
           `/unit/${existingUnit._id}`,
           payload,
-          { params: { testEmail: email } } 
+          { params: { testEmail: email } }
         );
       } else {
         response = await api.post(
@@ -73,11 +74,7 @@ const AddUnitForm = ({ property, existingUnit, onSave, onCancel }) => {
       }
 
       console.log("Unit saved successfully:", response.data);
-      alert(
-        existingUnit
-          ? "Unit updated successfully!"
-          : "Unit created successfully!"
-      );
+      alert(existingUnit ? "Unit updated successfully!" : "Unit created successfully!");
       onSave();
     } catch (error) {
       console.error("Request failed:", error.response?.data || error.message);
@@ -138,7 +135,7 @@ const AddUnitForm = ({ property, existingUnit, onSave, onCancel }) => {
               setNewUnit({ ...newUnit, unitType: e.target.value })
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1]"
-            required={!existingUnit && newUnit.unitType === ""} // ✅ force selection only for new units
+            required={!existingUnit && newUnit.unitType === ""}
           >
             <option value="">Select unit type</option>
             <option value="Apartment">Apartment</option>

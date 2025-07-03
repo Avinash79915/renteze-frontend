@@ -21,8 +21,7 @@ const AppRoutes = () => {
     <Routes>
       {/* Auth routes (no navbar/sidebar) */}
       <Route element={<AuthLayout />}>
-        <Route path="/login" element={<LoginOptions />} />
-        <Route path="/login/:role" element={<LoginForm />} />
+        <Route path="/login" element={<LoginForm />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/otp" element={<OtpVerification />} />
       </Route>

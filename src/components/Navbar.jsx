@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../features/auth/authSlice";
+import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "react-toastify";
 import api from "../Pages/utils/axios";
 import {
@@ -16,12 +15,8 @@ import {
 import demo from "../assets/Avatar.svg";
 
 const Navbar = ({ activeSection, setActiveSection }) => {
-  const { isAuthenticated } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
+  const { user, isAuthenticated, logout, isLoading } = useAuth0();
   const navigate = useNavigate();
-
-  const user = JSON.parse(localStorage.getItem("user"));
-  const email = user?.email;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -31,6 +26,8 @@ const Navbar = ({ activeSection, setActiveSection }) => {
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [errorNotifications, setErrorNotifications] = useState(null);
+
+  const email = user?.email;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -66,28 +63,31 @@ const Navbar = ({ activeSection, setActiveSection }) => {
       }
     };
 
-    fetchNotifications(); // initial fetch right away
+    fetchNotifications();
 
-    const interval = setInterval(fetchNotifications, 10000); // fetch every 10 seconds
+    const interval = setInterval(fetchNotifications, 10000);
 
-    return () => clearInterval(interval); // cleanup on unmount or dependency change
+    return () => clearInterval(interval);
   }, [isAuthenticated, email]);
 
   const handleLogout = () => {
     setDropdownOpen(false);
-    dispatch(logout());
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("token");
-    localStorage.removeItem("authToken");
+    logout({ returnTo: window.location.origin });
     toast.success("Logged out successfully!");
-    navigate("/", { replace: true });
   };
+
+const handleClick = (role) => {
+    navigate(`/login/${role}`);
+  };
+  if (isLoading) {
+    return null; 
+  }
 
   return (
     <nav className="bg-white shadow-md md:px-6 px-3 py-3 flex justify-between items-center sticky top-0 z-40 pl-16 md:pl-6">
       <Link
         onClick={() => setActiveSection && setActiveSection("dashboard")}
-        className="text-2xl font-light text-[#004C86] hover:text-blue-700 transition-colors"
+        className="text-2xl font-light text-[#004C86] hover:text-blue-700 transition-colors cursor-pointer"
       >
         Renteze
       </Link>
@@ -97,13 +97,13 @@ const Navbar = ({ activeSection, setActiveSection }) => {
           <div className="flex items-center ">
             <div className="flex items-center space-x-4" ref={dropdownRef}>
               <img
-                src={user?.profilePicture || demo}
+                src={user?.picture || demo}
                 alt="Profile"
                 className="w-8 h-8 rounded-full object-cover border-2 border-transparent hover:border-blue-300 transition-colors cursor-pointer"
               />
 
               <span className="text-gray-700 font-medium hidden sm:inline">
-                {user?.username || user?.name || "User"}
+                {user?.nickname || user?.name || "User"}
               </span>
 
               <button
@@ -126,18 +126,16 @@ const Navbar = ({ activeSection, setActiveSection }) => {
               >
                 <div className="px-2 py-2 border-b border-gray-100">
                   <p className="text-xl font-semibold text-[#1652A1]">
-                    {user?.username || user?.name || "User"}
+                    {user?.nickname || user?.name || "User"}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {user?.email || "user@example.com"}
-                  </p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
 
                 <button
                   className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                   onClick={() => {
                     setDropdownOpen(false);
-                    setActiveSection("editProfile");
+                    setActiveSection && setActiveSection("editProfile");
                   }}
                 >
                   <FiEdit className="mr-3" size={16} />
@@ -225,7 +223,7 @@ const Navbar = ({ activeSection, setActiveSection }) => {
                         await api.patch(
                           `/notifications/markAllRead?email=${email}`
                         );
-                        setNotifications([]); // Clear local notifications immediately
+                        setNotifications([]); 
                         setNotificationOpen(false);
                         toast.success("All notifications marked as read!");
                       } catch (error) {

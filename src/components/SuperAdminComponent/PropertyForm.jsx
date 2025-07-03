@@ -10,8 +10,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import axios from "axios";
-import api from "../../Pages/utils/axios"; 
+import api from "../../Pages/utils/axios";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const PropertyForm = ({ setShowAddForm, setProperties }) => {
   const [activeTab, setActiveTab] = useState("basic");
@@ -41,6 +41,9 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
     occupancyStatus: "Vacant",
   });
 
+  const { user, isAuthenticated, isLoading } = useAuth0(); // ✅ Moved hook to top-level
+  const email = user?.email;
+
   const resetPropertyForm = () => {
     setPropertyForm({
       name: "",
@@ -68,64 +71,60 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
     });
   };
 
- const handleAddProperty = async () => {
-  const { name, propertyNo, address, locationPin } = propertyForm;
+  const handleAddProperty = async () => {
+    const { name, propertyNo, address, locationPin } = propertyForm;
 
-  if (!name.trim() || !propertyNo.trim() || !address.trim() || !locationPin.trim()) {
-    alert("Please fill all required fields");
-    return;
-  }
+    if (!name.trim() || !propertyNo.trim() || !address.trim() || !locationPin.trim()) {
+      alert("Please fill all required fields");
+      return;
+    }
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const email = user?.email;
+    const payload = {
+      propertyName: name,
+      propertyAddress: address,
+      propertyLocation: locationPin,
+    };
 
-  const payload = {
-    propertyName: name,
-    propertyAddress: address,
-    propertyLocation: locationPin,
+    try {
+      const response = await api.post(
+        `/create-property?testEmail=${email}`,
+        payload
+      );
+
+      if (response.status === 201 || response.status === 200) {
+        const updated = await api.get(`/dashboard?testEmail=${email}`);
+        setProperties(updated.data.properties || []);
+        resetPropertyForm();
+        setShowAddForm(false);
+      } else {
+        alert("Failed to create property.");
+      }
+    } catch (error) {
+      console.error("Error creating property:", error);
+      alert("Internal Server Error: " + error?.response?.data?.message);
+    }
   };
 
-  try {
-    const response = await api.post(`/create-property?testEmail=${email}`,
-      payload
-    );
+  const handleAddUnit = () => {
+    const { unitNumber } = unitForm;
 
-    if (response.status === 201 || response.status === 200) {
-      const updated = await api.get(`/dashboard?testEmail=${email}`);
-      setProperties(updated.data.properties || []);
-      resetPropertyForm();
-      setShowAddForm(false);
-    } else {
-      alert("Failed to create property.");
+    if (!unitNumber.trim()) {
+      alert("Unit Number is required to add a unit.");
+      return;
     }
-  } catch (error) {
-    console.error("Error creating property:", error);
-    alert("Internal Server Error: " + error?.response?.data?.message);
-  }
-};
 
-
-const handleAddUnit = () => {
-  const { unitNumber } = unitForm;
-
-  if (!unitNumber.trim()) {
-    alert("Unit Number is required to add a unit.");
-    return;
-  }
-
-  setUnits([...units, { id: Date.now().toString(), ...unitForm }]);
-  setUnitForm({
-    unitNumber: "",
-    area: "",
-    floorNumber: "",
-    unitType: "Apartment",
-    waterMeterNo: "",
-    electricMeterNo: "",
-    amenities: "",
-    occupancyStatus: "Vacant",
-  });
-};
-
+    setUnits([...units, { id: Date.now().toString(), ...unitForm }]);
+    setUnitForm({
+      unitNumber: "",
+      area: "",
+      floorNumber: "",
+      unitType: "Apartment",
+      waterMeterNo: "",
+      electricMeterNo: "",
+      amenities: "",
+      occupancyStatus: "Vacant",
+    });
+  };
 
   const handleDeleteUnit = (unitId) => {
     setUnits(units.filter((unit) => unit.id !== unitId));

@@ -6,6 +6,7 @@ import PropertyCard from "./AdminPropertyCard";
 import PropertyForm from "./PropertyForm";
 import PropertyDetail from "./PropertyDetail";
 import api from "../../Pages/utils/axios";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const PropertyListing = () => {
   const [properties, setProperties] = useState([]);
@@ -15,17 +16,15 @@ const PropertyListing = () => {
   const [loading, setLoading] = useState(true);
   const [showAddUnitForm, setShowAddUnitForm] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user, isAuthenticated, isLoading } = useAuth0();
   const email = user?.email;
 
   const reloadProperties = async () => {
     setLoading(true);
     try {
-      // 1) Fetch properties first
       const res = await api.get(`/dashboard?testEmail=${email}&nocache=${Date.now()}`);
       const props = res.data.properties || [];
 
-      // 2) For each property, fetch its latest units
       const updatedProps = await Promise.all(
         props.map(async (property) => {
           try {

@@ -20,68 +20,68 @@ import {
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import TenantForm from "../TenantComponents/TenantForm";
+import { useEffect } from "react";
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
+import api from "../../Pages/utils/axios"; 
 
 const TenantManagement = () => {
-  const [tenants, setTenants] = useState([
-    {
-      id: "1",
-      firstName: "Ravi",
-      lastName: "Kumar",
-      age: 32,
-      fatherHusbandName: "Suresh Kumar",
-      businessNature: "Software Engineer",
-      primaryPhone: "+91 9876543210",
-      secondaryPhone: "+91 8765432109",
-      email: "ravi.kumar@email.com",
-      contractType: "Lease",
-      duration: "11 months",
-      amount: 15000,
-      advanceAmount: 30000,
-      property: "Palm Residency",
-      unit: "A-101",
-      status: "Active",
-      joinDate: "2024-01-15",
-      waterType: "Individual",
-      powerType: "Individual",
-      gstRequired: "No",
-      address: {
-        doorNo: "123",
-        street: "MG Road",
-        city: "Bangalore",
-        state: "Karnataka",
-        country: "India",
-      },
-    },
-    {
-      id: "2",
-      firstName: "Anjali",
-      lastName: "Sharma",
-      age: 28,
-      fatherHusbandName: "Rajesh Sharma",
-      businessNature: "Marketing Manager",
-      primaryPhone: "+91 9876543211",
-      secondaryPhone: "+91 8765432108",
-      email: "anjali.sharma@email.com",
-      contractType: "Rent",
-      duration: "12 months",
-      amount: 15000,
-      advanceAmount: 30000,
-      property: "Sky View Flats",
-      unit: "B-205",
-      status: "Active",
-      joinDate: "2024-02-20",
-      waterType: "Common",
-      powerType: "Individual",
-      gstRequired: "Yes",
-      address: {
-        doorNo: "456",
-        street: "Brigade Road",
-        city: "Bangalore",
-        state: "Karnataka",
-        country: "India",
-      },
-    },
-  ]);
+  const { unitId } = useParams();
+  const [tenants, setTenants] = useState([]); // ✅ add this line
+  const { user, isAuthenticated, isLoading } = useAuth0();
+  const email = user?.email;
+  
+  useEffect(() => {
+    const fetchTenants = async () => {
+      if (!email) return; 
+
+      try {
+        const res = await api.get(`/tenants/owner-by-email?email=${email}`);
+        const apiTenants = res.data.tenants || [];
+
+        const mappedTenants = apiTenants.map((t) => ({
+          id: t._id,
+          firstName: t.name?.split(" ")[0] || t.name,
+          lastName: t.name?.split(" ").slice(1).join(" ") || "",
+          age: "",
+          fatherHusbandName: "",
+          businessNature: t.natureOfBusiness,
+          primaryPhone: t.phone,
+          secondaryPhone: "",
+          email: t.email,
+          contractType: "Lease",
+          duration: `${Math.round(
+            (new Date(t.agreementEndDate) - new Date(t.agreementStartDate)) /
+              (1000 * 60 * 60 * 24 * 30)
+          )} months`,
+          amount: t.rent,
+          advanceAmount: t.advance,
+          property: t.unit.propertyId, // you can populate property name in backend
+          unit: t.unit.roomId,
+          status: t.rentStatus === "due" ? "Pending" : "Active",
+          joinDate: new Date(t.agreementStartDate).toISOString().split("T")[0],
+          waterType: "Individual",
+          powerType: "Individual",
+          gstRequired: "No",
+          address: {
+            doorNo: "",
+            street: "",
+            city: "",
+            state: "",
+            country: "India",
+          },
+        }));
+
+        setTenants(mappedTenants);
+      } catch (error) {
+        console.error("Failed to fetch tenants:", error);
+        setTenants([]);
+      }
+    };
+
+    fetchTenants();
+  }, [email]);
 
   const [properties] = useState([
     "Palm Residency",
@@ -89,7 +89,7 @@ const TenantManagement = () => {
     "Green Villas",
     "Ocean Heights",
     "Downtown Office",
-    "Warehouse A",
+    "avinash ki property A",
   ]);
 
   const [showAddForm, setShowAddForm] = useState(false);
