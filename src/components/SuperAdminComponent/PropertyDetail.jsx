@@ -31,8 +31,8 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
       email: "",
       phone: "",
       rent: "",
-      advance: "", 
-      annualIncrement: "", 
+      advance: "",
+      annualIncrement: "",
       agreementStartDate: "",
       agreementEndDate: "",
     },
@@ -50,7 +50,10 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
         setUnits(response.data.units || []);
         setFetchError(null);
       } catch (error) {
-        console.error("Error fetching units:", error.response?.data || error.message);
+        console.error(
+          "Error fetching units:",
+          error.response?.data || error.message
+        );
         setFetchError("Failed to load units. Please try again later.");
       } finally {
         setLoadingUnits(false);
@@ -67,7 +70,7 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
       });
       setUnits(response.data.units || []);
     } catch (error) {
-      console.error("Error reloading units:", error.response?.data || error.message);
+      
       setFetchError("Failed to reload units after update. Please refresh.");
     }
   };
@@ -85,7 +88,10 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
       alert("Unit deleted successfully!");
       reloadUnits();
     } catch (error) {
-      console.error("Error deleting unit:", error.response?.data || error.message);
+      console.error(
+        "Error deleting unit:",
+        error.response?.data || error.message
+      );
       alert("Failed to delete unit. Please try again.");
     }
   };
@@ -136,8 +142,14 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
       setSelectedUnit(null);
       reloadUnits();
     } catch (error) {
-      console.error("Error adding tenant:", error.response?.data || error.message);
-      alert("Failed to add tenant: " + (error.response?.data?.message || "Please try again."));
+      console.error(
+        "Error adding tenant:",
+        error.response?.data || error.message
+      );
+      alert(
+        "Failed to add tenant: " +
+          (error.response?.data?.message || "Please try again.")
+      );
     }
   };
 
@@ -159,7 +171,7 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
         <div className="fixed inset-0 flex items-center justify-center z-50">
           {/* Overlay with blur and semi-transparent black */}
           <div
-           className="fixed inset-0 backdrop-blur-md bg-black/30"
+            className="fixed inset-0 backdrop-blur-md bg-black/30"
             onClick={() => {
               setShowAddTenantForm(false);
               setSelectedUnit(null);
@@ -186,7 +198,10 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
               </div>
             </div>
 
-            <form className="p-2 md:p-6" onSubmit={handleSubmit(onSubmitTenant)}>
+            <form
+              className="p-2 md:p-6"
+              onSubmit={handleSubmit(onSubmitTenant)}
+            >
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -205,7 +220,9 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
                       autoFocus
                     />
                     {errors.name && (
-                      <p className="text-red-500 text-sm">{errors.name.message}</p>
+                      <p className="text-red-500 text-sm">
+                        {errors.name.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -224,7 +241,9 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                     />
                     {errors.email && (
-                      <p className="text-red-500 text-sm">{errors.email.message}</p>
+                      <p className="text-red-500 text-sm">
+                        {errors.email.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -243,7 +262,9 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                     />
                     {errors.phone && (
-                      <p className="text-red-500 text-sm">{errors.phone.message}</p>
+                      <p className="text-red-500 text-sm">
+                        {errors.phone.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -254,12 +275,17 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
                       type="number"
                       {...register("rent", {
                         required: "Rent is required",
-                        min: { value: 1, message: "Rent must be greater than 0" },
+                        min: {
+                          value: 1,
+                          message: "Rent must be greater than 0",
+                        },
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                     />
                     {errors.rent && (
-                      <p className="text-red-500 text-sm">{errors.rent.message}</p>
+                      <p className="text-red-500 text-sm">
+                        {errors.rent.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -270,33 +296,45 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
                       type="number"
                       {...register("advance", {
                         required: "Advance is required",
-                        min: { value: 0, message: "Advance cannot be negative" },
+                        min: {
+                          value: 0,
+                          message: "Advance cannot be negative",
+                        },
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                     />
                     {errors.advance && (
-                      <p className="text-red-500 text-sm">{errors.advance.message}</p>
+                      <p className="text-red-500 text-sm">
+                        {errors.advance.message}
+                      </p>
                     )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Annual Increment (%) <span className="text-red-500">*</span>
+                      Annual Increment (%){" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       {...register("annualIncrement", {
                         required: "Annual increment is required",
-                        min: { value: 0, message: "Annual increment cannot be negative" },
+                        min: {
+                          value: 0,
+                          message: "Annual increment cannot be negative",
+                        },
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                     />
                     {errors.annualIncrement && (
-                      <p className="text-red-500 text-sm">{errors.annualIncrement.message}</p>
+                      <p className="text-red-500 text-sm">
+                        {errors.annualIncrement.message}
+                      </p>
                     )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Agreement Start Date <span className="text-red-500">*</span>
+                      Agreement Start Date{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
@@ -306,7 +344,9 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                     />
                     {errors.agreementStartDate && (
-                      <p className="text-red-500 text-sm">{errors.agreementStartDate.message}</p>
+                      <p className="text-red-500 text-sm">
+                        {errors.agreementStartDate.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -324,7 +364,9 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                     />
                     {errors.agreementEndDate && (
-                      <p className="text-red-500 text-sm">{errors.agreementEndDate.message}</p>
+                      <p className="text-red-500 text-sm">
+                        {errors.agreementEndDate.message}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -380,46 +422,47 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
 
       {/* Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-        <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-            </div>
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-                {units.length}
-              </p>
-              <p className="text-sm sm:text-base text-gray-600">Total Units</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
-              <User className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-            </div>
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-                {units.filter((unit) => unit.occupancyStatus === "Occupied").length}
-              </p>
-              <p className="text-sm sm:text-base text-gray-600">Occupied</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
-              <Home className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-            </div>
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-                {units.filter((unit) => unit.occupancyStatus === "Vacant").length}
-              </p>
-              <p className="text-sm sm:text-base text-gray-600">Vacant</p>
-            </div>
-          </div>
-        </div>
+  <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
+    <div className="flex items-center gap-3 sm:gap-4">
+      <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
       </div>
+      <div>
+        <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
+          {units.length}
+        </p>
+        <p className="text-sm sm:text-base text-gray-600">Total Units</p>
+      </div>
+    </div>
+  </div>
+  <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
+    <div className="flex items-center gap-3 sm:gap-4">
+      <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+        <User className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+      </div>
+      <div>
+        <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
+          {units.filter((unit) => unit.isOccupied).length}
+        </p>
+        <p className="text-sm sm:text-base text-gray-600">Occupied</p>
+      </div>
+    </div>
+  </div>
+  <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
+    <div className="flex items-center gap-3 sm:gap-4">
+      <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+        <Home className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+      </div>
+      <div>
+        <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
+          {units.filter((unit) => !unit.isOccupied).length}
+        </p>
+        <p className="text-sm sm:text-base text-gray-600">Vacant</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 
       {/* Units Table */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
@@ -466,8 +509,9 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
                     <td className="px-6 py-4">{unit.floor ?? "N/A"}</td>
                     <td className="px-6 py-4">₹{unit.rentCost ?? "0"}</td>
                     <td className="px-6 py-4">
-                      {unit.occupancyStatus || "Vacant"}
+                      {unit.isOccupied ? "Occupied" : "Vacant"}
                     </td>
+
                     <td className="px-6 py-4 flex gap-2">
                       <FaRegEdit
                         className="text-blue-600 hover:underline h-5 w-5 cursor-pointer"

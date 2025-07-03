@@ -1,29 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { X, Home } from "lucide-react";
 import api from "../../Pages/utils/axios";
 import { useAuth0 } from "@auth0/auth0-react";
 
 const AddUnitForm = ({ property, existingUnit, onSave, onCancel }) => {
-  const [newUnit, setNewUnit] = useState({
-    unitNumber: "",
-    unitType: "",
-    floorNumber: "",
-    area: "",
-    bedrooms: "",
-    bathrooms: "",
-    rentCost: "",
-    maintenanceCost: "",
-    bescomNumber: "",
-    image: "",
-    occupancyStatus: "Vacant",
-  });
-
-  const { user, isAuthenticated, isLoading } = useAuth0(); 
-  const email = user?.email;
-
-  useEffect(() => {
-    if (existingUnit) {
-      setNewUnit({
+  const initialUnitState = existingUnit
+    ? {
         unitNumber: existingUnit.roomId || "",
         unitType: existingUnit.unitType || "Apartment",
         floorNumber: existingUnit.floor?.toString() || "",
@@ -35,9 +17,25 @@ const AddUnitForm = ({ property, existingUnit, onSave, onCancel }) => {
         bescomNumber: existingUnit.bescomNumber || "",
         image: existingUnit.image || "",
         occupancyStatus: existingUnit.occupancyStatus || "Vacant",
-      });
-    }
-  }, [existingUnit]);
+      }
+    : {
+        unitNumber: "",
+        unitType: "",
+        floorNumber: "",
+        area: "",
+        bedrooms: "",
+        bathrooms: "",
+        rentCost: "",
+        maintenanceCost: "",
+        bescomNumber: "",
+        image: "",
+        occupancyStatus: "Vacant",
+      };
+
+  const [newUnit, setNewUnit] = useState(initialUnitState);
+
+  const { user, isAuthenticated, isLoading } = useAuth0();
+  const email = user?.email;
 
   const handleSave = async () => {
     if (!newUnit.unitNumber || !newUnit.unitType || !newUnit.bescomNumber) {
@@ -54,17 +52,16 @@ const AddUnitForm = ({ property, existingUnit, onSave, onCancel }) => {
       bescomNumber: newUnit.bescomNumber,
       hasWaterConnection: false,
       hasIndependentToilet: false,
-      occupancyStatus: newUnit.occupancyStatus,
+      isOccupied: newUnit.occupancyStatus === "Occupied",
     };
+
 
     try {
       let response;
       if (existingUnit) {
-        response = await api.patch(
-          `/unit/${existingUnit._id}`,
-          payload,
-          { params: { testEmail: email } }
-        );
+        response = await api.patch(`/unit/${existingUnit._id}`, payload, {
+          params: { testEmail: email },
+        });
       } else {
         response = await api.post(
           `/unit/property/${property._id}/create`,
@@ -73,8 +70,12 @@ const AddUnitForm = ({ property, existingUnit, onSave, onCancel }) => {
         );
       }
 
-      console.log("Unit saved successfully:", response.data);
-      alert(existingUnit ? "Unit updated successfully!" : "Unit created successfully!");
+      
+      alert(
+        existingUnit
+          ? "Unit updated successfully!"
+          : "Unit created successfully!"
+      );
       onSave();
     } catch (error) {
       console.error("Request failed:", error.response?.data || error.message);

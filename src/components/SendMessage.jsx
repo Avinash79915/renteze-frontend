@@ -52,11 +52,10 @@ const { user, isAuthenticated } = useAuth0();
     try {
       const payload = {
         senderEmail,
-        recipientEmail: formData.recipient, // 👈 send selected recipient's email
+        recipientEmail: formData.recipient, 
         subject: formData.subject,
         body: formData.body,
       };
-      console.log("Sending payload:", payload);
       await api.post("/messages", payload);
       setSuccess("Message sent successfully!");
       setFormData({ recipient: "", subject: "", body: "" });

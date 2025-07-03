@@ -9,12 +9,11 @@ const PropertyCard = ({
   setShowAddForm,
 }) => {
   const totalUnits = property.units?.length || 0;
-  const occupiedUnits =
-    property.units?.filter((unit) => unit.occupancyStatus === "Occupied")
-      .length || 0;
+
+  // 🔥 Correct occupancy calculation: use isOccupied flag!
+  const occupiedUnits = property.units?.filter((unit) => unit.isOccupied).length || 0;
   const vacantUnits = totalUnits - occupiedUnits;
-  const occupancyRate =
-    totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
+  const occupancyRate = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
 
   return (
     <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group">
@@ -80,7 +79,7 @@ const PropertyCard = ({
             <div
               className={`h-2 rounded-full transition-all duration-500 ${
                 occupancyRate >= 80
-                  ? "bg-[#1652A1] "
+                  ? "bg-[#1652A1]"
                   : occupancyRate >= 50
                   ? "bg-[#1652A1]"
                   : "bg-[#1652A1]"
@@ -104,7 +103,7 @@ const PropertyCard = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleDeleteProperty(property._id); 
+              handleDeleteProperty(property._id);
             }}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >
@@ -120,19 +119,12 @@ const PropertyCard = ({
                   {vacantUnits} unit{vacantUnits !== 1 ? "s" : ""} available
                 </span>
               ) : (
-                <span className="text-green-600 font-medium">
-                  Fully occupied
-                </span>
+                <span className="text-green-600 font-medium">Fully occupied</span>
               )}
             </span>
             <span>
               {totalUnits > 0 && (
-                <span className="text-gray-500">
-                  {Math.round(
-                    (totalUnits / (totalUnits > 0 ? totalUnits : 1)) * 100
-                  )}
-                  % capacity
-                </span>
+                <span className="text-gray-500">{occupancyRate}% capacity</span>
               )}
             </span>
           </div>
