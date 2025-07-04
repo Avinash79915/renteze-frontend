@@ -29,7 +29,7 @@ const Home = () => {
             navigate("/tenant/home");
             break;
           case "owner":
-            navigate("/admin/home");
+            navigate("/superadmin/home");
             break;
           default:
             navigate("/");

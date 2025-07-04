@@ -6,14 +6,14 @@ import api from "../Pages/utils/axios";
 
 const Sidebar = ({ activeSection, setActiveSection }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [role, setRole] = useState("guest"); // default guest
-  const { user, isAuthenticated, isLoading } = useAuth0(); // ✅ get user from Auth0
+  const [role, setRole] = useState("guest"); 
+  const { user, isAuthenticated, isLoading } = useAuth0(); 
 
   const items = sidebarItemsByRole[role] || [];
 
   useEffect(() => {
     const fetchRole = async () => {
-      if (!isAuthenticated || isLoading) return; // wait until Auth0 finishes loading
+      if (!isAuthenticated || isLoading) return; 
 
       const email = user?.email;
       if (!email) {
@@ -25,7 +25,7 @@ const Sidebar = ({ activeSection, setActiveSection }) => {
       try {
         const res = await api.get(`/dashboard?testEmail=${email}`);
         const fetchedRole = res.data.role;
-        console.log("Sidebar - Full response:", res.data); // 👈 ye add karo
+        console.log("Sidebar - Full response:", res.data); 
         setRole(fetchedRole || "guest");
       } catch (err) {
         console.error("Sidebar - Failed to fetch user role:", err);

@@ -10,7 +10,7 @@ export const sidebarItemsByRole = {
     // { key: "contact", label: "Contact", icon: reportIcon },
   ],
 
-  superadmin: [
+  owner: [
     { key: "dashboard", label: "Dashboard", icon: adminIcon },
     { key: "property", label: "Property List", icon: propertyIcon },
     { key: "user", label: "User Management", icon: adminIcon },
@@ -19,7 +19,7 @@ export const sidebarItemsByRole = {
     { key: "communication", label: "Communication", icon: reportIcon },
   ],
 
-  owner: [
+  admin: [
     { key: "dashboard", label: "Dashboard", icon: adminIcon },
     { key: "property", label: "Property List", icon: propertyIcon },
     { key: "tenant", label: "Tenant Management", icon: tenantIcon },
