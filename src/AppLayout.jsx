@@ -6,12 +6,16 @@ import Sidebar from "./components/Sidebar";
 import AdminHome from "./Pages/admin/AdminHome";
 import SuperAdminHome from "./Pages/SuperAdmin/SuperAdmin";
 import TenantHome from "./Pages/tenant/TenantHome";
+import GlobalLoader from "./components/GlobalLoader"; // ✅ import
 
 const AppLayout = () => {
   const location = useLocation();
-  const [activeSection, setActiveSection] = useState("dashboard");
-  const [userRole, setUserRole] = useState("guest");
+  const [activeSection, setActiveSection] = useState(() => {
+    return localStorage.getItem("activeSection") || "dashboard";
+  });
 
+  const [userRole, setUserRole] = useState("guest");
+  const [loading, setLoading] = useState(true); // ✅ loader
   const { user } = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -24,7 +28,16 @@ const AppLayout = () => {
     } else if (roleFromStorage) {
       setUserRole(roleFromStorage);
     }
+
+    // Simulate loading for smoother UX
+    const timer = setTimeout(() => setLoading(false), 400); // ⏳
+    return () => clearTimeout(timer);
   }, [user]);
+
+  const handleSectionChange = (section) => {
+    setActiveSection(section);
+    localStorage.setItem("activeSection", section);
+  };
 
   const renderPage = () => {
     switch (location.pathname) {
@@ -32,21 +45,21 @@ const AppLayout = () => {
         return (
           <AdminHome
             activeSection={activeSection}
-            setActiveSection={setActiveSection}
+            setActiveSection={handleSectionChange}
           />
         );
       case "/superadmin/home":
         return (
           <SuperAdminHome
             activeSection={activeSection}
-            setActiveSection={setActiveSection}
+            setActiveSection={handleSectionChange}
           />
         );
       case "/tenant/home":
         return (
           <TenantHome
             activeSection={activeSection}
-            setActiveSection={setActiveSection}
+            setActiveSection={handleSectionChange}
           />
         );
       default:
@@ -54,18 +67,20 @@ const AppLayout = () => {
     }
   };
 
+  if (loading) return <GlobalLoader />; // ✅ show loading
+
   return (
     <div className="min-h-screen">
       <Sidebar
         role={userRole}
         activeSection={activeSection}
-        setActiveSection={setActiveSection}
+        setActiveSection={handleSectionChange}
       />
       <div className="flex flex-col min-h-screen pl-0 md:pl-80">
         <Navbar
           role={userRole}
           activeSection={activeSection}
-          setActiveSection={setActiveSection}
+          setActiveSection={handleSectionChange}
         />
         <main className="flex-1 p-0 md:p-4 overflow-y-auto">
           {renderPage()}

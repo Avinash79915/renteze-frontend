@@ -1,80 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   FiHome,
   FiUsers,
   FiDollarSign,
-  FiSettings,
   FiMapPin,
   FiUser,
-  FiCheckCircle,
-  FiClock,
   FiAlertCircle,
   FiTrendingUp,
   FiEye,
   FiEdit,
   FiPlus,
 } from "react-icons/fi";
-
-// Mock data - replace with your API calls
-const mockProperties = [
-  {
-    id: 1,
-    name: "Sky Residency",
-    location: "Bangalore, Koramangala",
-    totalUnits: 50,
-    occupiedUnits: 45,
-    vacantUnits: 5,
-    monthlyRent: 450000,
-    adminAssigned: "Raj Kumar",
-    adminId: 1,
-    status: "Active",
-    pendingIssues: 3,
-    collectionRate: 95,
-  },
-  {
-    id: 2,
-    name: "Palm Heights",
-    location: "Mumbai, Bandra",
-    totalUnits: 80,
-    occupiedUnits: 72,
-    vacantUnits: 8,
-    monthlyRent: 720000,
-    adminAssigned: "Priya Sharma",
-    adminId: 2,
-    status: "Active",
-    pendingIssues: 1,
-    collectionRate: 98,
-  },
-  {
-    id: 3,
-    name: "Green View",
-    location: "Delhi, Gurgaon",
-    totalUnits: 60,
-    occupiedUnits: 55,
-    vacantUnits: 5,
-    monthlyRent: 550000,
-    adminAssigned: "Amit Singh",
-    adminId: 3,
-    status: "Active",
-    pendingIssues: 5,
-    collectionRate: 92,
-  },
-  {
-    id: 4,
-    name: "Ocean View",
-    location: "Chennai, OMR",
-    totalUnits: 40,
-    occupiedUnits: 35,
-    vacantUnits: 5,
-    monthlyRent: 350000,
-    adminAssigned: "Anita Desai",
-    adminId: 4,
-    status: "Under Maintenance",
-    pendingIssues: 8,
-    collectionRate: 88,
-  },
-];
-
+import { useNavigate } from "react-router-dom"; 
+import api from "../../Pages/utils/axios";
+import { useAuth0 } from "@auth0/auth0-react";
 const mockAdmins = [
   {
     id: 1,
@@ -112,34 +52,141 @@ const mockAdmins = [
 
 const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [selectedProperty, setSelectedProperty] = useState(null);
-  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate(); // 👈 hook
+  const { user, isAuthenticated, isLoading } = useAuth0();
+  const email = user?.email;
+  // Fetch data from API
+   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await api.get(
+          `/dashboard?testEmail=${email}&nocache=${Date.now()}`
+        );
+        const apiData = response.data;
 
-  const totalProperties = mockProperties.length;
-  const totalUnits = mockProperties.reduce(
-    (sum, prop) => sum + prop.totalUnits,
-    0
-  );
-  const occupiedUnits = mockProperties.reduce(
+        // Fetch unit details for each property
+        const updatedProperties = await Promise.all(
+          apiData.properties.map(async (property, index) => {
+            try {
+              const unitResponse = await api.get(
+                `/unit/property/${property._id}?testEmail=${email}`
+              );
+              const units = unitResponse.data.units || [];
+
+              // Calculate occupancy
+              const totalUnits = units.length;
+              const occupiedUnits = units.filter((unit) => unit.isOccupied).length;
+              const vacantUnits = totalUnits - occupiedUnits;
+              const occupancyRate =
+                totalUnits > 0
+                  ? Math.round((occupiedUnits / totalUnits) * 100)
+                  : 0;
+
+              return {
+                id: index + 1,
+                _id: property._id,
+                name: property.name,
+                address: property.address,
+                location: property.location,
+                propertyNo: property.displayID || "N/A",
+                totalUnits,
+                occupiedUnits,
+                vacantUnits,
+                occupancyRate,
+                monthlyRent: 100000 * totalUnits, // Placeholder
+                adminAssigned: "Unknown", // Placeholder
+                adminId: null,
+                status: "Active", // Placeholder
+                pendingIssues: apiData.issues.filter(
+                  (issue) =>
+                    issue.status === "open" || issue.status === "in progress"
+                ).length,
+                collectionRate: 95, // Placeholder
+                units, // include units
+              };
+            } catch (error) {
+              console.error(
+                `Failed to fetch units for property ${property._id}`,
+                error
+              );
+              const totalUnits = property.units.length;
+              return {
+                id: index + 1,
+                _id: property._id,
+                name: property.name,
+                address: property.address,
+                location: property.location,
+                propertyNo: property.displayID || "N/A",
+                totalUnits,
+                occupiedUnits: totalUnits,
+                vacantUnits: 0,
+                occupancyRate: 100,
+                monthlyRent: 100000 * totalUnits,
+                adminAssigned: "Unknown",
+                adminId: null,
+                status: "Active",
+                pendingIssues: apiData.issues.filter(
+                  (issue) =>
+                    issue.status === "open" || issue.status === "in progress"
+                ).length,
+                collectionRate: 95,
+                units: property.units.map((unitId) => ({
+                  _id: unitId,
+                  isOccupied: true,
+                })),
+              };
+            }
+          })
+        );
+
+        setProperties(updatedProperties);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to fetch data from the API");
+        setLoading(false);
+      }
+    };
+
+    if (!isLoading && isAuthenticated && email) {
+      fetchData();
+    }
+  }, [isLoading, isAuthenticated, email]);
+
+
+  // Calculate summary stats
+  const totalProperties = properties.length;
+  const totalUnits = properties.reduce((sum, prop) => sum + prop.totalUnits, 0);
+  const occupiedUnits = properties.reduce(
     (sum, prop) => sum + prop.occupiedUnits,
     0
   );
-  const vacantUnits = mockProperties.reduce(
+  const vacantUnits = properties.reduce(
     (sum, prop) => sum + prop.vacantUnits,
     0
   );
-  const totalMonthlyRevenue = mockProperties.reduce(
+  const totalMonthlyRevenue = properties.reduce(
     (sum, prop) => sum + prop.monthlyRent,
     0
   );
-  const totalPendingIssues = mockProperties.reduce(
+  const totalPendingIssues = properties.reduce(
     (sum, prop) => sum + prop.pendingIssues,
     0
   );
-  const averageCollectionRate = Math.round(
-    mockProperties.reduce((sum, prop) => sum + prop.collectionRate, 0) /
-      mockProperties.length
-  );
+  const averageCollectionRate = properties.length
+    ? Math.round(
+        properties.reduce((sum, prop) => sum + prop.collectionRate, 0) /
+          properties.length
+      )
+    : 0;
+  const averageOccupancyRate = properties.length
+    ? Math.round(
+        properties.reduce((sum, prop) => sum + prop.occupancyRate, 0) /
+          properties.length
+      )
+    : 0;
 
   const StatCard = ({
     icon: Icon,
@@ -219,8 +266,7 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
             </span>
           )}
           <button
-                     onClick={() => setActiveSection("property")}
-
+            onClick={() => setActiveSection("property")}
             className="text-[#1652A1] hover:text-blue-800 text-sm font-medium"
           >
             View Details
@@ -270,7 +316,6 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
         >
           View Details
         </button>
-
         <button className="px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50 transition-colors">
           <FiEdit size={14} />
         </button>
@@ -280,7 +325,6 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
 
   const OverviewTab = () => (
     <div className="space-y-6">
-      {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           icon={FiHome}
@@ -292,7 +336,7 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
         <StatCard
           icon={FiUsers}
           title="Occupancy Rate"
-          value={`${Math.round((occupiedUnits / totalUnits) * 100)}%`}
+          value={`${averageOccupancyRate}%`}
           subtitle={`${occupiedUnits} occupied / ${vacantUnits} vacant`}
           color="#1652A1"
         />
@@ -303,21 +347,24 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
           subtitle={`${averageCollectionRate}% collection rate`}
           color="#1652A1"
         />
-        <StatCard
+        {/* <StatCard
           icon={FiAlertCircle}
           title="Pending Issues"
           value={totalPendingIssues}
           subtitle="Across all properties"
           color="#1652A1"
-        />
+        /> */}
       </div>
 
-      {/* Recent Activity & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-3 md:p-6 rounded-lg border  border-gray-200">
+        <div className="lg:col-span-2 bg-white p-3 md:p-6 rounded-lg border border-gray-200">
           <h3 className="text-lg font-semibold mb-4">Revenue Overview</h3>
-          <div className="space-y-4">
-            {mockProperties.map((property) => (
+          <div
+            className={`space-y-4 ${
+              properties.length > 4 ? "max-h-[340px] overflow-y-auto pr-2" : ""
+            }`}
+          >
+            {properties.map((property) => (
               <div
                 key={property.id}
                 className="flex items-center justify-between md:p-3 p-1 bg-gray-50 rounded"
@@ -341,7 +388,7 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
           </div>
         </div>
 
-        <div className="bg-white md:p-6 p-3 rounded-l  border border-gray-200">
+        <div className="bg-white md:p-6 p-3 rounded-lg border border-gray-200">
           <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
           <div className="space-y-3">
             <button
@@ -358,11 +405,15 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
               <FiUsers className="text-[#1652A1]" />
               <span>Manage Admins</span>
             </button>
-            <button className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded transition-colors">
+            <button
+            onClick={() => setActiveSection("report")}
+             className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded transition-colors">
               <FiUsers className="text-[#1652A1]" />
               <span>View Reports</span>
             </button>
-            <button className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded transition-colors">
+            <button
+             onClick={() => setActiveSection("property")} 
+            className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded transition-colors">
               <FiPlus className="text-[#1652A1]" />
               <span>Add New Property</span>
             </button>
@@ -373,13 +424,12 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
   );
 
   const PropertiesTab = () => (
-    <div className="space-y-6  ">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Property Management</h2>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {mockProperties.map((property) => (
+        {properties.map((property) => (
           <PropertyCard key={property.id} property={property} />
         ))}
       </div>
@@ -390,9 +440,7 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Admin Management</h2>
-       
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {mockAdmins.map((admin) => (
           <AdminCard key={admin.id} admin={admin} />
@@ -401,9 +449,16 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
     </div>
   );
 
+  if (loading) {
+    return <div className="text-center p-6">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center p-6 text-red-600">{error}</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="px-2 sm:px-6 py-3 sm:py-4">
           <h1 className="text-xl sm:text-2xl font-bold text-[#1652A1]">
@@ -413,8 +468,6 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
             Manage all properties and administrators
           </p>
         </div>
-
-        {/* Navigation Tabs */}
         <div className="px-2 sm:px-6">
           <nav className="flex flex-col sm:flex-row sm:space-x-8 space-y-2 sm:space-y-0">
             {[
@@ -439,9 +492,7 @@ const SuperAdminDashboard = ({ setActiveSection, setActiveProperty }) => {
           </nav>
         </div>
       </div>
-
-      {/* Main Content */}
-      <div className="py-6   sm:p-6">
+      <div className="py-6 sm:p-6">
         {activeTab === "overview" && <OverviewTab />}
         {activeTab === "properties" && <PropertiesTab />}
         {activeTab === "admins" && <AdminsTab />}

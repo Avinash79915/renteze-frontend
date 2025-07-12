@@ -1,5 +1,13 @@
 import React from "react";
-import { Eye, Trash2, MapPin, Home, Users, Building } from "lucide-react";
+import {
+  Eye,
+  Trash2,
+  MapPin,
+  Home,
+  Users,
+  Building,
+  IdCard,
+} from "lucide-react";
 import property1 from "../../assets/property-1.jpg";
 
 const PropertyCard = ({
@@ -11,9 +19,11 @@ const PropertyCard = ({
   const totalUnits = property.units?.length || 0;
 
   // 🔥 Correct occupancy calculation: use isOccupied flag!
-  const occupiedUnits = property.units?.filter((unit) => unit.isOccupied).length || 0;
+  const occupiedUnits =
+    property.units?.filter((unit) => unit.isOccupied).length || 0;
   const vacantUnits = totalUnits - occupiedUnits;
-  const occupancyRate = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
+  const occupancyRate =
+    totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
 
   return (
     <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group">
@@ -26,9 +36,9 @@ const PropertyCard = ({
 
         {property.propertyNo && (
           <div className="absolute top-3 left-3">
-            <div className="px-2 py-1 bg-black bg-opacity-60 text-white text-xs rounded-md">
+            {/* <div className="px-2 py-1 bg-black bg-opacity-60 text-white text-xs rounded-md">
               #{property.propertyNo}
-            </div>
+            </div> */}
           </div>
         )}
       </div>
@@ -38,6 +48,12 @@ const PropertyCard = ({
           <h3 className="text-lg font-semibold text-[#1652A1] mb-1 line-clamp-1">
             {property.name}
           </h3>
+
+          <div className="flex items-center text-gray-600 text-sm mb-1">
+            <span className="font-medium mr-1">Display ID:</span>
+            <span className="text-gray-700 truncate">{property.displayID}</span>
+          </div>
+
           <div className="flex items-center text-gray-600 text-sm">
             <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
             <span className="line-clamp-1">{property.address}</span>
@@ -119,7 +135,9 @@ const PropertyCard = ({
                   {vacantUnits} unit{vacantUnits !== 1 ? "s" : ""} available
                 </span>
               ) : (
-                <span className="text-green-600 font-medium">Fully occupied</span>
+                <span className="text-green-600 font-medium">
+                  Fully occupied
+                </span>
               )}
             </span>
             <span>

@@ -1,50 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TenantReport from "../components/TenantReport";
 import PaymentReport from "../components/PaymentReport";
-
-const tenantData = [
-  {
-    name: "Avinash k",
-    shop: "1135",
-    property: "Birds 1",
-    start: "22/01/2023",
-    end: "22/01/2024",
-    status: "Closing Soon",
-  },
-  // ... (rest of tenantData remains unchanged)
-  {
-    name: "Atul",
-    shop: "134",
-    property: "Skyline Plaza",
-    start: "20/06/2023",
-    end: "20/06/2024",
-    status: "Available",
-  },
-];
-
-const initialPaymentData = [
-  {
-    id: 1,
-    tenantName: "Aviansh",
-    amount: "₹25,000",
-    invoiceMonth: "January 2024",
-    invoiceType: "Rent",
-    status: "Paid",
-    paidOn: "15/01/2024",
-    paymentMethod: "Bank Transfer",
-  },
-  // ... (rest of initialPaymentData remains unchanged)
-  {
-    id: 8,
-    tenantName: "Tushar",
-    amount: "₹26,000",
-    invoiceMonth: "February 2024",
-    invoiceType: "Rent",
-    status: "Unpaid",
-    paidOn: "-",
-    paymentMethod: "-",
-  },
-];
+import { useAuth0 } from "@auth0/auth0-react";
+import api from "../../src/Pages/utils/axios";
 
 const statusColors = {
   Occupied: "bg-green-500",
@@ -60,6 +18,56 @@ const paymentStatusColors = {
 
 const Reports = () => {
   const [activeReport, setActiveReport] = useState("payment");
+  const [tenantData, setTenantData] = useState([]);
+  const [paymentData, setPaymentData] = useState([]);
+  const { user, isAuthenticated, isLoading } = useAuth0();
+  const email = user?.email;
+
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const response = await api.get(
+        `/tenants/owner-by-email?email=${user.email}`
+      );
+      const tenants = response.data.tenants || [];
+
+      // Tenant Report
+      const transformedTenants = tenants.map((tenant) => ({
+        name: tenant.name,
+        shop: tenant.unit?.roomId || "N/A",
+        property: tenant.unit?.propertyId?.name || "Unknown Property",
+        start: new Date(tenant.agreementStartDate).toLocaleDateString("en-GB"),
+        end: new Date(tenant.agreementEndDate).toLocaleDateString("en-GB"),
+        status: "Occupied",
+      }));
+      setTenantData(transformedTenants);
+
+      // Payment Report
+      const transformedPayments = tenants.flatMap((tenant) =>
+        (tenant.paymentHistory || []).map((payment, index) => ({
+          id: `${tenant._id}-${index}`,
+          tenantName: tenant.name,
+          amount: `₹${payment.amount}`,
+          invoiceMonth: payment.invoiceMonth,
+          invoiceType: payment.invoiceType,
+          status: payment.status,
+          paidOn: payment.paidOn
+            ? new Date(payment.paidOn).toLocaleDateString("en-GB")
+            : "-",
+          paymentMethod: payment.paymentMethod || "-",
+        }))
+      );
+      setPaymentData(transformedPayments);
+    } catch (err) {
+      console.error("Error fetching report data:", err);
+    }
+  };
+
+  if (!isLoading && isAuthenticated && user?.email) {
+    fetchData();
+  }
+}, [isLoading, isAuthenticated, user?.email]);
+
 
   return (
     <div className="p-2 md:p-6">
@@ -91,7 +99,7 @@ const Reports = () => {
         <TenantReport tenantData={tenantData} statusColors={statusColors} />
       ) : (
         <PaymentReport
-          initialPaymentData={initialPaymentData}
+          initialPaymentData={paymentData}
           paymentStatusColors={paymentStatusColors}
         />
       )}

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useForm } from "react-hook-form";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Save, X } from "lucide-react";
@@ -10,7 +9,7 @@ const TenantForm = ({ setShowAddForm }) => {
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const { user, isAuthenticated, isLoading } = useAuth0();
+  const { user } = useAuth0();
   const email = user?.email;
 
   const {
@@ -33,6 +32,9 @@ const TenantForm = ({ setShowAddForm }) => {
       agreementStartDate: "",
       agreementEndDate: "",
       annualIncrement: "",
+      paymentAmount: "",
+      invoiceMonth: "",
+      invoiceType: "",
     },
   });
 
@@ -61,7 +63,9 @@ const TenantForm = ({ setShowAddForm }) => {
         return;
       }
       try {
-        const res = await api.get(`/property/${selectedPropertyId}/units?testEmail=${email}`);
+        const res = await api.get(
+          `/property/${selectedPropertyId}/units?testEmail=${email}`
+        );
         setUnits(res.data.units || []);
       } catch (error) {
         console.error("Failed to fetch units:", error);
@@ -71,41 +75,56 @@ const TenantForm = ({ setShowAddForm }) => {
     fetchUnits();
   }, [selectedPropertyId, email]);
 
-  const onSubmit = async (data) => {
-    setLoading(true);
-    try {
-      const payload = {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        unit: data.unit,
-        nameOfBusiness: data.nameOfBusiness || "",
-        natureOfBusiness: data.natureOfBusiness || "",
-        rent: data.rent,
-        advance: data.advance,
-        agreementStartDate: data.agreementStartDate,
-        agreementEndDate: data.agreementEndDate,
-        annualIncrement: data.annualIncrement,
-      };
+ const onSubmit = async (data) => {
+  setLoading(true);
+  try {
+    const payload = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      unit: data.unit,
+      nameOfBusiness: data.nameOfBusiness || "",
+      natureOfBusiness: data.natureOfBusiness || "",
+      rent: data.rent,
+      advance: data.advance,
+      agreementStartDate: data.agreementStartDate,
+      agreementEndDate: data.agreementEndDate,
+      annualIncrement: data.annualIncrement,
+      paymentHistory:  [{
+        amount: Number(data.paymentAmount),
+        invoiceMonth: data.invoiceMonth.match(/^[A-Za-z]+ \d{4}$/) 
+          ? `${data.invoiceMonth.split(" ")[0].charAt(0).toUpperCase() + data.invoiceMonth.split(" ")[0].slice(1).toLowerCase()} ${data.invoiceMonth.split(" ")[1]}`
+          : new Date().toLocaleString("default", { month: "long", year: "numeric" }),
+        invoiceType: data.invoiceType || "Rent",
+        status: "Unpaid",
+        paidOn: null,
+        paymentMethod: "-",
+      }]  
+    };
 
+    console.log("📤 Payload sent to backend:", payload);
 
-      const response = await api.post(`/property/${data.property}/tenant?testEmail=${email}`, payload, { headers: { "Content-Type": "application/json" } });
+      const response = await api.post(
+        `/property/${data.property}/tenant?testEmail=${email}`,
+        payload,
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-      alert("✅ Tenant added successfully!");
-      console.log("Tenant added:", response.data);
-      reset();
-      setShowAddForm(false);
-    } catch (error) {
-      console.error("❌ Failed to add tenant:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to add tenant. Please check your input and try again.";
-      alert(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+    alert("✅ Tenant added successfully!");
+    console.log("Tenant added:", response.data);
+    reset();
+    setShowAddForm(false);
+  } catch (error) {
+    console.error("❌ Failed to add tenant:", error);
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to add tenant. Please check your input and try again.";
+    alert(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 mb-6 shadow-lg">
@@ -149,6 +168,7 @@ const TenantForm = ({ setShowAddForm }) => {
                 <p className="text-red-500 text-sm">{errors.name.message}</p>
               )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email <span className="text-red-500">*</span>
@@ -168,6 +188,7 @@ const TenantForm = ({ setShowAddForm }) => {
                 <p className="text-red-500 text-sm">{errors.email.message}</p>
               )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Phone <span className="text-red-500">*</span>
@@ -187,6 +208,7 @@ const TenantForm = ({ setShowAddForm }) => {
                 <p className="text-red-500 text-sm">{errors.phone.message}</p>
               )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Name of Business <span className="text-red-500">*</span>
@@ -195,7 +217,7 @@ const TenantForm = ({ setShowAddForm }) => {
                 {...register("nameOfBusiness", {
                   required: "Name of Business is required",
                   validate: (value) =>
-                    value !== "N/A" || "Name of Business cannot be 'N/A'",
+                    !value.toLowerCase().startsWith("n/a") || "Name of Business cannot start with 'N/A'",
                 })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
               />
@@ -205,6 +227,7 @@ const TenantForm = ({ setShowAddForm }) => {
                 </p>
               )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nature of Business <span className="text-red-500">*</span>
@@ -213,7 +236,7 @@ const TenantForm = ({ setShowAddForm }) => {
                 {...register("natureOfBusiness", {
                   required: "Nature of Business is required",
                   validate: (value) =>
-                    value !== "N/A" || "Nature of Business cannot be 'N/A'",
+                    !value.toLowerCase().startsWith("n/a") || "Nature of Business cannot start with 'N/A'",
                 })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
               />
@@ -225,7 +248,7 @@ const TenantForm = ({ setShowAddForm }) => {
             </div>
           </div>
 
-          {/* Property and Unit */}
+          {/* Property & Unit */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -248,6 +271,7 @@ const TenantForm = ({ setShowAddForm }) => {
                 </p>
               )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Unit <span className="text-red-500">*</span>
@@ -288,6 +312,7 @@ const TenantForm = ({ setShowAddForm }) => {
                 <p className="text-red-500 text-sm">{errors.rent.message}</p>
               )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Advance <span className="text-red-500">*</span>
@@ -325,6 +350,7 @@ const TenantForm = ({ setShowAddForm }) => {
                 </p>
               )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Agreement End Date <span className="text-red-500">*</span>
@@ -345,6 +371,7 @@ const TenantForm = ({ setShowAddForm }) => {
                 </p>
               )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Annual Increment (%) <span className="text-red-500">*</span>
@@ -362,6 +389,66 @@ const TenantForm = ({ setShowAddForm }) => {
                   {errors.annualIncrement.message}
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* Payment Details */}
+          <div className="mt-6">
+            <h4 className="text-lg font-semibold text-gray-700 mb-2">
+              Payment Details (Optional)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Payment Amount
+                </label>
+                <input
+                  type="number"
+                  {...register("paymentAmount", {
+                    min: { value: 0, message: "Payment amount cannot be negative" },
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                  placeholder="e.g., 10000"
+                />
+                {errors.paymentAmount && (
+                  <p className="text-red-500 text-sm">{errors.paymentAmount.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Invoice Month
+                </label>
+                <input
+                  type="text"
+                  {...register("invoiceMonth", {
+                    pattern: {
+                      value: /^[A-Za-z]+ \d{4}$/,
+                      message: "Invoice Month must be in format 'Month YYYY' (e.g., 'July 2025')",
+                    },
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                  placeholder="e.g., July 2025"
+                />
+                {errors.invoiceMonth && (
+                  <p className="text-red-500 text-sm">{errors.invoiceMonth.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Invoice Type
+                </label>
+                <select
+                  {...register("invoiceType")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                >
+                  <option value="">Select Type</option>
+                  <option value="Rent">Rent</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

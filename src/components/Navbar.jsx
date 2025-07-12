@@ -13,6 +13,7 @@ import {
   FiClock,
 } from "react-icons/fi";
 import demo from "../assets/Avatar.svg";
+import { FaRecycle } from "react-icons/fa";
 
 const Navbar = ({ activeSection, setActiveSection }) => {
   const { user, isAuthenticated, logout, isLoading } = useAuth0();
@@ -76,11 +77,11 @@ const Navbar = ({ activeSection, setActiveSection }) => {
     toast.success("Logged out successfully!");
   };
 
-const handleClick = (role) => {
+  const handleClick = (role) => {
     navigate(`/login/${role}`);
   };
   if (isLoading) {
-    return null; 
+    return null;
   }
 
   return (
@@ -140,6 +141,17 @@ const handleClick = (role) => {
                 >
                   <FiEdit className="mr-3" size={16} />
                   Edit Profile
+                </button>
+                <button
+                  className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    setActiveSection && setActiveSection("history");
+                  }}
+                >
+                  <FaRecycle />
+
+                  <span className="ml-2">Recycle Bin</span>
                 </button>
 
                 <button
@@ -223,7 +235,7 @@ const handleClick = (role) => {
                         await api.patch(
                           `/notifications/markAllRead?email=${email}`
                         );
-                        setNotifications([]); 
+                        setNotifications([]);
                         setNotificationOpen(false);
                         toast.success("All notifications marked as read!");
                       } catch (error) {
@@ -250,13 +262,7 @@ const handleClick = (role) => {
               <FiLogIn size={18} />
               <span className="hidden sm:inline">Login</span>
             </Link>
-            <Link
-              to="/signup"
-              className="flex items-center gap-2 bg-[#1652A1] text-white font-medium hover:bg-blue-500 transition-colors px-3 py-1 rounded-md"
-            >
-              <FiUserPlus size={18} />
-              <span className="hidden sm:inline">Signup</span>
-            </Link>
+            {/* c */}
           </div>
         )}
       </div>

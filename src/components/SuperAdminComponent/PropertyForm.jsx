@@ -12,6 +12,7 @@ import {
 import { toast } from "react-toastify";
 import api from "../../Pages/utils/axios";
 import { useAuth0 } from "@auth0/auth0-react";
+import StatusPopup from "../StatusPopup";
 
 const PropertyForm = ({ setShowAddForm, setProperties }) => {
   const [activeTab, setActiveTab] = useState("basic");
@@ -43,6 +44,8 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
 
   const { user, isAuthenticated, isLoading } = useAuth0(); // ✅ Moved hook to top-level
   const email = user?.email;
+  const [status, setStatus] = useState({ type: null, message: "" });
+  const [loading, setLoading] = useState(false);
 
   const resetPropertyForm = () => {
     setPropertyForm({
@@ -74,10 +77,18 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
   const handleAddProperty = async () => {
     const { name, propertyNo, address, locationPin } = propertyForm;
 
-    if (!name.trim() || !propertyNo.trim() || !address.trim() || !locationPin.trim()) {
-      alert("Please fill all required fields");
+    if (
+      !name.trim() ||
+      !propertyNo.trim() ||
+      !address.trim() ||
+      !locationPin.trim()
+    ) {
+      setStatus({ type: "error", message: "Please fill all required fields" });
       return;
     }
+
+    setLoading(true);
+    setStatus({ type: "loading", message: "Creating property..." });
 
     const payload = {
       propertyName: name,
@@ -96,12 +107,28 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
         setProperties(updated.data.properties || []);
         resetPropertyForm();
         setShowAddForm(false);
+
+        setStatus({
+          type: "success",
+          message: "Property created successfully!",
+        });
+
+        setTimeout(() => {
+          setStatus({ type: null, message: "" });
+        }, 2000);
       } else {
-        alert("Failed to create property.");
+        setStatus({ type: "error", message: "Failed to create property." });
       }
     } catch (error) {
       console.error("Error creating property:", error);
-      alert("Internal Server Error: " + error?.response?.data?.message);
+      setStatus({
+        type: "error",
+        message:
+          "Internal Server Error: " +
+          (error?.response?.data?.message || "Please try again."),
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -131,380 +158,397 @@ const PropertyForm = ({ setShowAddForm, setProperties }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 mb-6   shadow-lg">
-      <div className="p-3 md:p-6 border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <h3 className="text-xl font-semibold text-[#1652A1]">
-            Add New Property
-          </h3>
-          <button
-            onClick={() => {
-              setShowAddForm(false);
-              resetPropertyForm();
-            }}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <>
+      {status.type && (
+        <StatusPopup type={status.type} message={status.message} />
+      )}
 
-        <div className="flex flex-wrap gap-3 mt-4 bg-gray-100 p-1 sm:p-3 rounded-lg">
-          {[
-            { id: "basic", label: "Basic Info", icon: Home },
-            { id: "utilities", label: "Utilities", icon: Zap },
-            { id: "documents", label: "Documents", icon: Home },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-white text-[#1652A1] shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="p-2 md:p-6">
-        {activeTab === "basic" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Property Name *
-                </label>
-                <input
-                  type="text"
-                  value={propertyForm.name}
-                  onChange={(e) =>
-                    setPropertyForm((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  required
-                  autoFocus
-                />
-                
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Property Number *
-                </label>
-                <input
-                  type="text"
-                  value={propertyForm.propertyNo}
-                  onChange={(e) =>
-                    setPropertyForm((prev) => ({
-                      ...prev,
-                      propertyNo: e.target.value,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  required
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address *
-                </label>
-                <input
-                  type="text"
-                  value={propertyForm.address}
-                  onChange={(e) =>
-                    setPropertyForm((prev) => ({
-                      ...prev,
-                      address: e.target.value,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Property Location Pin *
-                </label>
-                <input
-                  type="text"
-                  value={propertyForm.locationPin}
-                  onChange={(e) =>
-                    setPropertyForm((prev) => ({
-                      ...prev,
-                      locationPin: e.target.value,
-                    }))
-                  }
-                  required
-                  placeholder="Enter location pin"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Property Type
-                </label>
-                <select
-                  value={propertyForm.type}
-                  onChange={(e) =>
-                    setPropertyForm((prev) => ({
-                      ...prev,
-                      type: e.target.value,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                >
-                  <option value="">Select Type</option>
-                  <option value="Residential">Residential</option>
-                  <option value="Commercial">Commercial</option>
-                  <option value="Warehouse">Warehouse</option>
-                  <option value="Industrial">Industrial</option>
-                  <option value="Retail">Retail</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Number of Floors
-                </label>
-                <input
-                  type="number"
-                  value={propertyForm.floors}
-                  onChange={(e) =>
-                    setPropertyForm((prev) => ({
-                      ...prev,
-                      floors: e.target.value,
-                    }))
-                  }
-                  placeholder="e.g. 3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  min={0}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Property Image Upload
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png"
-                    className="hidden"
-                    id="propertyImageUpload"
-                    onChange={(e) =>
-                      console.log("Property Image uploaded:", e.target.files[0])
-                    }
-                  />
-                  <label
-                    htmlFor="propertyImageUpload"
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                  >
-                    <Upload className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-600">Upload Image</span>
-                  </label>
-                </div>
-              </div>
-            </div>
+      <div className="bg-white rounded-lg border border-gray-200 mb-6   shadow-lg">
+        <div className="p-3 md:p-6 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-semibold text-[#1652A1]">
+              Add New Property
+            </h3>
+            <button
+              onClick={() => {
+                setShowAddForm(false);
+                resetPropertyForm();
+              }}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        )}
 
-       
+          <div className="flex flex-wrap gap-3 mt-4 bg-gray-100 p-1 sm:p-3 rounded-lg">
+            {[
+              { id: "basic", label: "Basic Info", icon: Home },
+              { id: "utilities", label: "Utilities", icon: Zap },
+              { id: "documents", label: "Documents", icon: Home },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? "bg-white text-[#1652A1] shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        {activeTab === "utilities" && (
-          <div className="space-y-6">
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <Droplets className="w-5 h-5 text-blue-500" />
-                Water
-              </h4>
+        <div className="p-2 md:p-6">
+          {activeTab === "basic" && (
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Water Meter Number
+                    Property Name *
                   </label>
                   <input
                     type="text"
-                    value={propertyForm.waterMeterNo}
+                    value={propertyForm.name}
                     onChange={(e) =>
                       setPropertyForm((prev) => ({
                         ...prev,
-                        waterMeterNo: e.target.value,
+                        name: e.target.value,
                       }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    required
+                    autoFocus
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Property Number *
+                  </label>
+                  <input
+                    type="text"
+                    value={propertyForm.propertyNo}
+                    onChange={(e) =>
+                      setPropertyForm((prev) => ({
+                        ...prev,
+                        propertyNo: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Address *
+                  </label>
+                  <input
+                    type="text"
+                    value={propertyForm.address}
+                    onChange={(e) =>
+                      setPropertyForm((prev) => ({
+                        ...prev,
+                        address: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Property Location Pin *
+                  </label>
+                  <input
+                    type="text"
+                    value={propertyForm.locationPin}
+                    onChange={(e) =>
+                      setPropertyForm((prev) => ({
+                        ...prev,
+                        locationPin: e.target.value,
+                      }))
+                    }
+                    required
+                    placeholder="Enter location pin"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Property Type
+                  </label>
+                  <select
+                    value={propertyForm.type}
+                    onChange={(e) =>
+                      setPropertyForm((prev) => ({
+                        ...prev,
+                        type: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                  >
+                    <option value="">Select Type</option>
+                    <option value="Residential">Residential</option>
+                    <option value="Commercial">Commercial</option>
+                    <option value="Warehouse">Warehouse</option>
+                    <option value="Industrial">Industrial</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Number of Floors
+                  </label>
+                  <input
+                    type="number"
+                    value={propertyForm.floors}
+                    onChange={(e) =>
+                      setPropertyForm((prev) => ({
+                        ...prev,
+                        floors: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. 3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    min={0}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Property Image Upload
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png"
+                      className="hidden"
+                      id="propertyImageUpload"
+                      onChange={(e) =>
+                        console.log(
+                          "Property Image uploaded:",
+                          e.target.files[0]
+                        )
+                      }
+                    />
+                    <label
+                      htmlFor="propertyImageUpload"
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+                    >
+                      <Upload className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm text-gray-600">
+                        Upload Image
+                      </span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-yellow-500" />
-                Power
-              </h4>
+          )}
+
+          {activeTab === "utilities" && (
+            <div className="space-y-6">
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  <Droplets className="w-5 h-5 text-blue-500" />
+                  Water
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Water Meter Number
+                    </label>
+                    <input
+                      type="text"
+                      value={propertyForm.waterMeterNo}
+                      onChange={(e) =>
+                        setPropertyForm((prev) => ({
+                          ...prev,
+                          waterMeterNo: e.target.value,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-yellow-500" />
+                  Power
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Electric Meter Number
+                    </label>
+                    <input
+                      type="text"
+                      value={propertyForm.electricMeterNo}
+                      onChange={(e) =>
+                        setPropertyForm((prev) => ({
+                          ...prev,
+                          electricMeterNo: e.target.value,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Amenities and Fixtures
+                  </label>
+                  <textarea
+                    value={propertyForm.amenities}
+                    onChange={(e) =>
+                      setPropertyForm((prev) => ({
+                        ...prev,
+                        amenities: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    rows="3"
+                    placeholder="List of amenities and fixtures"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Occupancy Status
+                  </label>
+                  <select
+                    value={propertyForm.occupancyStatus}
+                    onChange={(e) =>
+                      setPropertyForm((prev) => ({
+                        ...prev,
+                        occupancyStatus: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                  >
+                    <option value="Vacant">Vacant</option>
+                    <option value="Occupied">Occupied</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "documents" && (
+            <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Electric Meter Number
+                    Upload Agreement Templates
                   </label>
-                  <input
-                    type="text"
-                    value={propertyForm.electricMeterNo}
-                    onChange={(e) =>
-                      setPropertyForm((prev) => ({
-                        ...prev,
-                        electricMeterNo: e.target.value,
-                      }))
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      multiple
+                      className="hidden"
+                      id="agreementTemplatesUpload"
+                      onChange={(e) =>
+                        console.log(
+                          "Agreement Templates uploaded:",
+                          e.target.files
+                        )
+                      }
+                    />
+                    <label
+                      htmlFor="agreementTemplatesUpload"
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+                    >
+                      <Upload className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm text-gray-600">
+                        Upload Files
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Upload Past Agreements
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      multiple
+                      className="hidden"
+                      id="pastAgreementsUpload"
+                      onChange={(e) =>
+                        console.log("Past Agreements uploaded:", e.target.files)
+                      }
+                    />
+                    <label
+                      htmlFor="pastAgreementsUpload"
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+                    >
+                      <Upload className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm text-gray-600">
+                        Upload Files
+                      </span>
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Amenities and Fixtures
+                  Unit History
                 </label>
                 <textarea
-                  value={propertyForm.amenities}
+                  value={propertyForm.unitHistory}
                   onChange={(e) =>
                     setPropertyForm((prev) => ({
                       ...prev,
-                      amenities: e.target.value,
+                      unitHistory: e.target.value,
                     }))
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                   rows="3"
-                  placeholder="List of amenities and fixtures"
+                  placeholder="Enter unit history details"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Occupancy Status
-                </label>
-                <select
-                  value={propertyForm.occupancyStatus}
-                  onChange={(e) =>
-                    setPropertyForm((prev) => ({
-                      ...prev,
-                      occupancyStatus: e.target.value,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                >
-                  <option value="Vacant">Vacant</option>
-                  <option value="Occupied">Occupied</option>
-                </select>
-              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {activeTab === "documents" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload Agreement Templates
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    multiple
-                    className="hidden"
-                    id="agreementTemplatesUpload"
-                    onChange={(e) =>
-                      console.log(
-                        "Agreement Templates uploaded:",
-                        e.target.files
-                      )
-                    }
-                  />
-                  <label
-                    htmlFor="agreementTemplatesUpload"
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                  >
-                    <Upload className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-600">Upload Files</span>
-                  </label>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload Past Agreements
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    multiple
-                    className="hidden"
-                    id="pastAgreementsUpload"
-                    onChange={(e) =>
-                      console.log("Past Agreements uploaded:", e.target.files)
-                    }
-                  />
-                  <label
-                    htmlFor="pastAgreementsUpload"
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                  >
-                    <Upload className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-600">Upload Files</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Unit History
-              </label>
-              <textarea
-                value={propertyForm.unitHistory}
-                onChange={(e) =>
-                  setPropertyForm((prev) => ({
-                    ...prev,
-                    unitHistory: e.target.value,
-                  }))
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                rows="3"
-                placeholder="Enter unit history details"
-              />
-            </div>
+        <div className=" p-2 md:p-6 border-t border-gray-200">
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => {
+                setShowAddForm(false);
+                resetPropertyForm();
+              }}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddProperty}
+              disabled={loading}
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : "bg-[#1652A1] text-white hover:bg-[#134a8e]"
+              }`}
+            >
+              <Save className="w-4 h-4" />
+              {loading ? "Adding..." : "Add Property"}
+            </button>
           </div>
-        )}
-      </div>
-
-      <div className=" p-2 md:p-6 border-t border-gray-200">
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => {
-              setShowAddForm(false);
-              resetPropertyForm();
-            }}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleAddProperty}
-            className="px-4 py-2 bg-[#1652A1] text-white rounded-lg hover:bg-[#134a8e] flex items-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            Add Property
-          </button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

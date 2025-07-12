@@ -1,83 +1,406 @@
-import React, { useState } from "react";
-import {
-  Plus,
-  User,
-  Home,
-  MapPin,
-  Users,
-  Phone,
-  Mail,
-  Calendar,
-  Edit,
-  Save,
-  X,
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { User, Home, MapPin, Users, Save, X } from "lucide-react";
+import { FaRegEdit } from "react-icons/fa";
+import { MdOutlineDeleteForever } from "react-icons/md";
+import { HiOutlineUserAdd } from "react-icons/hi";
+import api from "../../Pages/utils/axios";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useForm } from "react-hook-form";
 import AddUnitForm from "../SuperAdminComponent/AddUnitForm";
 
 const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
-  const [showAddTenantModal, setShowAddTenantModal] = useState(false);
+  const [units, setUnits] = useState([]);
+  const [loadingUnits, setLoadingUnits] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const [editingUnit, setEditingUnit] = useState(null);
+  const [showAddTenantForm, setShowAddTenantForm] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
-  const [editingTenant, setEditingTenant] = useState(null);
-  const [units, setUnits] = useState(property.units || []);
-  
-  const [newTenant, setNewTenant] = useState({
-    name: "",
-    contact: "",
-    email: "",
-    moveInDate: "",
+
+  const { user, isAuthenticated, isLoading } = useAuth0();
+  const email = user?.email;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      rent: "",
+      advance: "",
+      annualIncrement: "",
+      agreementStartDate: "",
+      agreementEndDate: "",
+    },
   });
 
   if (!property) return null;
 
+  useEffect(() => {
+    const fetchUnits = async () => {
+      setLoadingUnits(true);
+      try {
+        const response = await api.get(`/unit/property/${property._id}`, {
+          params: { testEmail: email },
+        });
+        setUnits(response.data.units || []);
+        setFetchError(null);
+      } catch (error) {
+        console.error(
+          "Error fetching units:",
+          error.response?.data || error.message
+        );
+        setFetchError("Failed to load units. Please try again later.");
+      } finally {
+        setLoadingUnits(false);
+      }
+    };
+
+    if (property?._id && email) fetchUnits();
+  }, [property?._id, email]);
+
+  const reloadUnits = async () => {
+    try {
+      const response = await api.get(`/unit/property/${property._id}`, {
+        params: { testEmail: email },
+      });
+      setUnits(response.data.units || []);
+    } catch (error) {
+      
+      setFetchError("Failed to reload units after update. Please refresh.");
+    }
+  };
+
+  const handleEditUnit = (unit) => {
+    setEditingUnit(unit);
+    setShowAddUnitForm(true);
+  };
+
+  const handleDeleteUnit = async (unitId) => {
+    if (!window.confirm("Are you sure you want to delete this unit?")) return;
+
+    try {
+      await api.delete(`/unit/${unitId}`, { params: { testEmail: email } });
+      alert("Unit deleted successfully!");
+      reloadUnits();
+    } catch (error) {
+      console.error(
+        "Error deleting unit:",
+        error.response?.data || error.message
+      );
+      alert("Failed to delete unit. Please try again.");
+    }
+  };
+
+  const handleAddOrEditUnit = async () => {
+    setShowAddUnitForm(false);
+    setEditingUnit(null);
+    await reloadUnits();
+  };
+
   const handleAddTenant = (unit) => {
     setSelectedUnit(unit);
-    setShowAddTenantModal(true);
-    setNewTenant({ name: "", contact: "", email: "", moveInDate: "" });
-  };
-
-  const handleSaveTenant = () => {
-    // This would typically update the property/unit data
-    console.log("Saving tenant:", newTenant, "to unit:", selectedUnit.id);
-    setShowAddTenantModal(false);
-    setSelectedUnit(null);
-  };
-
-  const handleEditTenant = (unit) => {
-    setEditingTenant(unit.id);
-    setNewTenant({
-      name: unit.tenant?.name || "",
-      contact: unit.tenant?.contact || "",
-      email: unit.tenant?.email || "",
-      moveInDate: unit.tenant?.moveInDate || "",
+    setShowAddTenantForm(true);
+    reset({
+      name: "",
+      email: "",
+      phone: "",
+      rent: unit.rentCost || "",
+      advance: "",
+      annualIncrement: "",
+      agreementStartDate: "",
+      agreementEndDate: "",
     });
   };
 
-  const handleSaveEdit = () => {
-    console.log("Updating tenant:", newTenant, "for unit:", editingTenant);
-    setEditingTenant(null);
+  const onSubmitTenant = async (data) => {
+    try {
+      const payload = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        unit: selectedUnit._id,
+        rent: data.rent,
+        advance: data.advance,
+        annualIncrement: data.annualIncrement,
+        agreementStartDate: data.agreementStartDate,
+        agreementEndDate: data.agreementEndDate,
+      };
+
+      await api.post(`/property/${property._id}/tenant`, payload, {
+        params: { testEmail: email },
+        headers: { "Content-Type": "application/json" },
+      });
+
+      alert("Tenant added successfully!");
+      setShowAddTenantForm(false);
+      reset();
+      setSelectedUnit(null);
+      reloadUnits();
+    } catch (error) {
+      console.error(
+        "Error adding tenant:",
+        error.response?.data || error.message
+      );
+      alert(
+        "Failed to add tenant: " +
+          (error.response?.data?.message || "Please try again.")
+      );
+    }
   };
 
-  const handleCancelEdit = () => {
-    setEditingTenant(null);
-    setNewTenant({ name: "", contact: "", email: "", moveInDate: "" });
-  };
-const handleAddUnit = (newUnit) => {
-    setUnits([...units, { ...newUnit, id: units.length + 1 }]);
-    setShowAddUnitForm(false);
-  };
   return (
-    <div className="space-y-8 ">
-    
+    <div className="space-y-8">
       {showAddUnitForm && (
         <AddUnitForm
           property={property}
-          onSave={handleAddUnit}
-          onCancel={() => setShowAddUnitForm(false)}
+          existingUnit={editingUnit}
+          onSave={handleAddOrEditUnit}
+          onCancel={() => {
+            setShowAddUnitForm(false);
+            setEditingUnit(null);
+          }}
         />
       )}
-      {/* Property Header Card */}
+
+      {showAddTenantForm && selectedUnit && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          {/* Overlay with blur and semi-transparent black */}
+          <div
+            className="fixed inset-0 backdrop-blur-md bg-black/30"
+            onClick={() => {
+              setShowAddTenantForm(false);
+              setSelectedUnit(null);
+              reset();
+            }}
+          ></div>
+          {/* Popup form */}
+          <div className="relative bg-white rounded-lg border border-gray-200 w-full max-w-2xl mx-4 shadow-xl max-h-[80vh] overflow-y-auto">
+            <div className="p-3 md:p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold text-[#1652A1]">
+                  Add Tenant for Unit {selectedUnit.roomId || "N/A"}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowAddTenantForm(false);
+                    setSelectedUnit(null);
+                    reset();
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <form
+              className="p-2 md:p-6"
+              onSubmit={handleSubmit(onSubmitTenant)}
+            >
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tenant Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      {...register("name", {
+                        required: "Name is required",
+                        minLength: {
+                          value: 2,
+                          message: "Name must be at least 2 characters",
+                        },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                      autoFocus
+                    />
+                    {errors.name && (
+                      <p className="text-red-500 text-sm">
+                        {errors.name.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      {...register("email", {
+                        required: "Email is required",
+                        pattern: {
+                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message: "Invalid email address",
+                        },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm">
+                        {errors.email.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      {...register("phone", {
+                        required: "Phone is required",
+                        pattern: {
+                          value: /^[0-9]{10}$/,
+                          message: "Phone number must be 10 digits",
+                        },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.phone && (
+                      <p className="text-red-500 text-sm">
+                        {errors.phone.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Monthly Rent <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      {...register("rent", {
+                        required: "Rent is required",
+                        min: {
+                          value: 1,
+                          message: "Rent must be greater than 0",
+                        },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.rent && (
+                      <p className="text-red-500 text-sm">
+                        {errors.rent.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Advance <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      {...register("advance", {
+                        required: "Advance is required",
+                        min: {
+                          value: 0,
+                          message: "Advance cannot be negative",
+                        },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.advance && (
+                      <p className="text-red-500 text-sm">
+                        {errors.advance.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Annual Increment (%){" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      {...register("annualIncrement", {
+                        required: "Annual increment is required",
+                        min: {
+                          value: 0,
+                          message: "Annual increment cannot be negative",
+                        },
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.annualIncrement && (
+                      <p className="text-red-500 text-sm">
+                        {errors.annualIncrement.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Agreement Start Date{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      {...register("agreementStartDate", {
+                        required: "Start date is required",
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.agreementStartDate && (
+                      <p className="text-red-500 text-sm">
+                        {errors.agreementStartDate.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Agreement End Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      {...register("agreementEndDate", {
+                        required: "End date is required",
+                        validate: (value) =>
+                          value > watch("agreementStartDate") ||
+                          "End date must be after start date",
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                    />
+                    {errors.agreementEndDate && (
+                      <p className="text-red-500 text-sm">
+                        {errors.agreementEndDate.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-2 md:p-6 border-t border-gray-200">
+                <div className="flex justify-end gapsm-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddTenantForm(false);
+                      setSelectedUnit(null);
+                      reset();
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-[#1652A1] text-white rounded-lg hover:bg-[#134a8e] flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    Add Tenant
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Property Header */}
       <div className="bg-gradient-to-r from-[#1652A1] to-[#009CDC] rounded-2xl p-4 sm:p-6 md:p-8 text-white shadow-xl">
-        {/* Top Section: Icon + Title */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
           <div className="p-3 bg-white/20 rounded-lg self-start">
             <Home className="w-7 h-7 sm:w-8 sm:h-8" />
@@ -91,69 +414,55 @@ const handleAddUnit = (newUnit) => {
             </p>
           </div>
         </div>
-
-        {/* Address Section */}
         <div className="flex flex-wrap items-center gap-2 text-blue-100">
           <MapPin className="w-5 h-5" />
           <p className="text-sm sm:text-base break-words">{property.address}</p>
         </div>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-        {/* Total Units */}
-        <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-            </div>
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-                {property.units.length}
-              </p>
-              <p className="text-sm sm:text-base text-gray-600">Total Units</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Occupied Units */}
-        <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
-              <User className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-            </div>
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-                {
-                  property.units.filter(
-                    (unit) => unit.occupancyStatus === "Occupied"
-                  ).length
-                }
-              </p>
-              <p className="text-sm sm:text-base text-gray-600">Occupied</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Vacant Units */}
-        <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
-              <Home className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-            </div>
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-                {
-                  property.units.filter(
-                    (unit) => unit.occupancyStatus === "Vacant"
-                  ).length
-                }
-              </p>
-              <p className="text-sm sm:text-base text-gray-600">Vacant</p>
-            </div>
-          </div>
-        </div>
+  <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
+    <div className="flex items-center gap-3 sm:gap-4">
+      <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
       </div>
+      <div>
+        <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
+          {units.length}
+        </p>
+        <p className="text-sm sm:text-base text-gray-600">Total Units</p>
+      </div>
+    </div>
+  </div>
+  <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
+    <div className="flex items-center gap-3 sm:gap-4">
+      <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+        <User className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+      </div>
+      <div>
+        <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
+          {units.filter((unit) => unit.isOccupied).length}
+        </p>
+        <p className="text-sm sm:text-base text-gray-600">Occupied</p>
+      </div>
+    </div>
+  </div>
+  <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
+    <div className="flex items-center gap-3 sm:gap-4">
+      <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+        <Home className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+      </div>
+      <div>
+        <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
+          {units.filter((unit) => !unit.isOccupied).length}
+        </p>
+        <p className="text-sm sm:text-base text-gray-600">Vacant</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 
       {/* Units Table */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
@@ -166,7 +475,15 @@ const handleAddUnit = (newUnit) => {
           </p>
         </div>
 
-        {property.units.length === 0 ? (
+        {loadingUnits ? (
+          <div className="p-12 text-center">
+            <p className="text-gray-500 text-lg">Loading units...</p>
+          </div>
+        ) : fetchError ? (
+          <div className="p-12 text-center text-red-500">
+            <p>{fetchError}</p>
+          </div>
+        ) : units.length === 0 ? (
           <div className="p-12 text-center">
             <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-lg">
@@ -175,474 +492,47 @@ const handleAddUnit = (newUnit) => {
           </div>
         ) : (
           <div className="overflow-x-auto w-full">
-            <table className="w-full table-auto hidden md:table">
-              <thead className="bg-gray-50">
+            <table className="min-w-full text-sm text-left text-gray-600">
+              <thead className="bg-gray-50 text-gray-700 text-xs uppercase">
                 <tr>
-                  <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Unit
-                  </th>
-                  <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Details
-                  </th>
-                  <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Tenant
-                  </th>
-                  <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Contact
-                  </th>
-                  <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Status
-                  </th>
-                  <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-900">
-                    Actions
-                  </th>
+                  <th className="px-6 py-4">Unit Number</th>
+                  <th className="px-6 py-4">Floor</th>
+                  <th className="px-6 py-4">Rent</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {property.units.map((unit) => (
-                  <tr
-                    key={unit.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    {/* Unit Info */}
-                    <td className="px-2 py-2 md:px-6 md:py-4">
-                      <div className="flex items-center gap-2 md:gap-3">
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden bg-gray-200">
-                          <img
-                            src={unit.image}
-                            alt={`Unit ${unit.unitNumber}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => (e.target.src = "")}
-                          />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900 text-xs md:text-base">
-                            Unit {unit.unitNumber}
-                          </p>
-                          <p className="text-xs md:text-sm text-gray-600">
-                            {unit.unitType}
-                          </p>
-                        </div>
-                      </div>
+                {units.map((unit) => (
+                  <tr key={unit._id}>
+                    <td className="px-6 py-4">{unit.roomId || "N/A"}</td>
+                    <td className="px-6 py-4">{unit.floor ?? "N/A"}</td>
+                    <td className="px-6 py-4">₹{unit.rentCost ?? "0"}</td>
+                    <td className="px-6 py-4">
+                      {unit.isOccupied ? "Occupied" : "Vacant"}
                     </td>
 
-                    {/* Unit Details */}
-                    <td className="px-2 py-2 md:px-6 md:py-4">
-                      <div className="text-xs md:text-sm">
-                        <p className="text-gray-900">
-                          Floor {unit.floorNumber || "N/A"}
-                        </p>
-                        <p className="text-gray-600">
-                          {unit.area || "N/A"} Sqft
-                        </p>
-                        <p className="text-gray-600">
-                          {unit.rooms?.bedrooms}BR • {unit.rooms?.bathrooms}BA
-                        </p>
-                      </div>
-                    </td>
-
-                    {/* Tenant Info */}
-                    <td className="px-2 py-2 md:px-6 md:py-4">
-                      {unit.occupancyStatus === "Occupied" ? (
-                        editingTenant === unit.id ? (
-                          <div className="space-y-1 md:space-y-2">
-                            <input
-                              type="text"
-                              value={newTenant.name}
-                              onChange={(e) =>
-                                setNewTenant({
-                                  ...newTenant,
-                                  name: e.target.value,
-                                })
-                              }
-                              className="w-full px-2 py-0.5 md:px-3 md:py-1 border border-gray-300 rounded-md text-xs md:text-sm"
-                              placeholder="Tenant name"
-                            />
-                            <input
-                              type="email"
-                              value={newTenant.email}
-                              onChange={(e) =>
-                                setNewTenant({
-                                  ...newTenant,
-                                  email: e.target.value,
-                                })
-                              }
-                              className="w-full px-2 py-0.5 md:px-3 md:py-1 border border-gray-300 rounded-md text-xs md:text-sm"
-                              placeholder="Email"
-                            />
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="font-medium text-gray-900 text-xs md:text-base">
-                              {unit.tenant?.name || "N/A"}
-                            </p>
-                            <p className="text-xs md:text-sm text-gray-600">
-                              {unit.tenant?.email || "No email"}
-                            </p>
-                          </div>
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic text-xs md:text-sm">
-                          No tenant assigned
-                        </p>
-                      )}
-                    </td>
-
-                    {/* Contact Info */}
-                    <td className="px-2 py-2 md:px-6 md:py-4">
-                      {unit.occupancyStatus === "Occupied" ? (
-                        editingTenant === unit.id ? (
-                          <input
-                            type="text"
-                            value={newTenant.contact}
-                            onChange={(e) =>
-                              setNewTenant({
-                                ...newTenant,
-                                contact: e.target.value,
-                              })
-                            }
-                            className="w-full px-2 py-0.5 md:px-3 md:py-1 border border-gray-300 rounded-md text-xs md:text-sm"
-                            placeholder="Phone number"
-                          />
-                        ) : (
-                          <div className="flex items-center gap-1 md:gap-2">
-                            <Phone className="w-3 h-3 md:w-4 md:h-4 text-gray-400" />
-                            <span className="text-xs md:text-sm text-gray-900">
-                              {unit.tenant?.contact || "N/A"}
-                            </span>
-                          </div>
-                        )
-                      ) : (
-                        <span className="text-gray-400 text-xs md:text-sm">
-                          -
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-2 py-2 md:px-6 md:py-4">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-medium ${
-                          unit.occupancyStatus === "Occupied"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {unit.occupancyStatus}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-2 py-2 md:px-6 md:py-4">
-                      <div className="flex items-center gap-1 md:gap-2">
-                        {editingTenant === unit.id ? (
-                          <>
-                            <button
-                              onClick={handleSaveEdit}
-                              className="p-1 md:p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Save changes"
-                            >
-                              <Save className="w-3 h-3 md:w-4 md:h-4" />
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="p-1 md:p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                              title="Cancel"
-                            >
-                              <X className="w-3 h-3 md:w-4 md:h-4" />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            {unit.occupancyStatus === "Vacant" ? (
-                              <button
-                                onClick={() => handleAddTenant(unit)}
-                                className="flex items-center gap-0.5 md:gap-1 px-2 py-0.5 md:px-3 md:py-1 bg-[#1652A1] text-white text-xs rounded-lg hover:bg-[#134a8e] transition-colors"
-                              >
-                                <Plus className="w-2 h-2 md:w-3 md:h-3" />
-                                Add Tenant
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleEditTenant(unit)}
-                                className="p-1 md:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                title="Edit tenant"
-                              >
-                                <Edit className="w-3 h-3 md:w-4 md:h-4" />
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
+                    <td className="px-6 py-4 flex gap-2">
+                      <FaRegEdit
+                        className="text-blue-600 hover:underline h-5 w-5 cursor-pointer"
+                        onClick={() => handleEditUnit(unit)}
+                      />
+                      <MdOutlineDeleteForever
+                        className="text-red-600 hover:underline h-5 w-5 cursor-pointer"
+                        onClick={() => handleDeleteUnit(unit._id)}
+                      />
+                      <HiOutlineUserAdd
+                        className="text-green-600 hover:underline h-5 w-5 cursor-pointer"
+                        onClick={() => handleAddTenant(unit)}
+                      />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
-            {/* Mobile Card Layout */}
-            <div className="md:hidden divide-y divide-gray-200">
-              {property.units.map((unit) => (
-                <div
-                  key={unit.id}
-                  className="p-4 bg-white hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex flex-col gap-5">
-                    {/* Unit Info */}
-                    <div className="flex items-center gap-10">
-                      <div className="w-15 h-15 rounded-lg overflow-hidden bg-gray-200">
-                        <img
-                          src={unit.image}
-                          alt={`Unit ${unit.unitNumber}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => (e.target.src = "")}
-                        />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">
-                          Unit {unit.unitNumber}
-                        </p>
-                        <p className="text-md text-gray-600">{unit.unitType}</p>
-                      </div>
-                    </div>
-
-                    {/* Unit Details */}
-                    <div className="text-md">
-                      <p className="text-gray-900">
-                        Floor {unit.floorNumber || "N/A"}
-                      </p>
-                      <p className="text-gray-600">{unit.area || "N/A"} Sqft</p>
-                      <p className="text-gray-600">
-                        {unit.rooms?.bedrooms}BR • {unit.rooms?.bathrooms}BA
-                      </p>
-                    </div>
-
-                    {/* Tenant Info */}
-                    <div>
-                      {unit.occupancyStatus === "Occupied" ? (
-                        editingTenant === unit.id ? (
-                          <div className="space-y-2">
-                            <input
-                              type="text"
-                              value={newTenant.name}
-                              onChange={(e) =>
-                                setNewTenant({
-                                  ...newTenant,
-                                  name: e.target.value,
-                                })
-                              }
-                              className="w-full px-2 py-0.5 border border-gray-300 rounded-md text-xs"
-                              placeholder="Tenant name"
-                            />
-                            <input
-                              type="email"
-                              value={newTenant.email}
-                              onChange={(e) =>
-                                setNewTenant({
-                                  ...newTenant,
-                                  email: e.target.value,
-                                })
-                              }
-                              className="w-full px-2 py-0.5 border border-gray-300 rounded-md text-xs"
-                              placeholder="Email"
-                            />
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="font-medium text-gray-900 text-md">
-                              {unit.tenant?.name || "N/A"}
-                            </p>
-                            <p className="text-xs text-gray-600">
-                              {unit.tenant?.email || "No email"}
-                            </p>
-                          </div>
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic text-xs">
-                          No tenant assigned
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Contact Info */}
-                    <div>
-                      {unit.occupancyStatus === "Occupied" ? (
-                        editingTenant === unit.id ? (
-                          <input
-                            type="text"
-                            value={newTenant.contact}
-                            onChange={(e) =>
-                              setNewTenant({
-                                ...newTenant,
-                                contact: e.target.value,
-                              })
-                            }
-                            className="w-full px-2 py-0.5 border border-gray-300 rounded-md text-xs"
-                            placeholder="Phone number"
-                          />
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Phone className="w-3 h-3 text-gray-400" />
-                            <span className="text-xs text-gray-900">
-                              {unit.tenant?.contact || "N/A"}
-                            </span>
-                          </div>
-                        )
-                      ) : (
-                        <span className="text-gray-400 text-md">-</span>
-                      )}
-                    </div>
-
-                    {/* Status */}
-                    <div>
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-md font-medium ${
-                          unit.occupancyStatus === "Occupied"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {unit.occupancyStatus}
-                      </span>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1">
-                      {editingTenant === unit.id ? (
-                        <>
-                          <button
-                            onClick={handleSaveEdit}
-                            className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                            title="Save changes"
-                          >
-                            <Save className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="p-1 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                            title="Cancel"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          {unit.occupancyStatus === "Vacant" ? (
-                            <button
-                              onClick={() => handleAddTenant(unit)}
-                              className="flex items-center gap-0.5 px-2 py-0.5 bg-[#1652A1] text-white text-xs rounded-lg hover:bg-[#134a8e] transition-colors"
-                            >
-                              <Plus className="w-3 h-5" />
-                              Add Tenant
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleEditTenant(unit)}
-                              className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Edit tenant"
-                            >
-                              <Edit className="w-5 h-5" />
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
       </div>
-
-      {/* Add Tenant Modal */}
-      {/* {showAddTenantModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Add Tenant to Unit {selectedUnit?.unitNumber}
-              </h3>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tenant Name
-                </label>
-                <input
-                  type="text"
-                  value={newTenant.name}
-                  onChange={(e) =>
-                    setNewTenant({ ...newTenant, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  placeholder="Enter tenant name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={newTenant.contact}
-                  onChange={(e) =>
-                    setNewTenant({ ...newTenant, contact: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  placeholder="Enter phone number"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={newTenant.email}
-                  onChange={(e) =>
-                    setNewTenant({ ...newTenant, email: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                  placeholder="Enter email address"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Move-in Date
-                </label>
-                <input
-                  type="date"
-                  value={newTenant.moveInDate}
-                  onChange={(e) =>
-                    setNewTenant({ ...newTenant, moveInDate: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-gray-200 flex gap-3">
-              <button
-                onClick={() => setShowAddTenantModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveTenant}
-                className="flex-1 px-4 py-2 bg-[#1652A1] text-white rounded-lg hover:bg-[#134a8e] transition-colors"
-              >
-                Add Tenant
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

@@ -56,7 +56,7 @@ function Login() {
                     Redirecting...
                   </div>
                 ) : (
-                  "Log in with Auth0"
+                  "Log in "
                 )}
               </button>
 
@@ -66,7 +66,7 @@ function Login() {
                 </div>
               )}
 
-              <div className="mt-8 text-center">
+              {/* <div className="mt-8 text-center">
                 <p className="text-white/70">
                   Don't have an account?{" "}
                   <button
@@ -76,7 +76,7 @@ function Login() {
                     Sign up
                   </button>
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

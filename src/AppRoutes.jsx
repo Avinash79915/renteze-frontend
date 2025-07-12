@@ -15,15 +15,16 @@ import TenantDashboard from "./Pages/tenant/TenantHome";
 import SuperAdminDashboard from "./Pages/SuperAdmin/SuperAdmin";
 import Signup from "./Pages/Signup";
 import OtpVerification from "./Pages/OtpVerification";
+import Callback from "./Pages/CallbackPage";
 
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Auth routes (no navbar/sidebar) */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginForm />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/otp" element={<OtpVerification />} />
+        <Route path="/callback" element={<Callback />} /> {/* ✅ ADD CALLBACK */}
       </Route>
 
       {/* Only Navbar routes */}

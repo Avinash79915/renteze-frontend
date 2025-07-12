@@ -16,30 +16,34 @@ const Communication = () => {
   const { user, isAuthenticated, isLoading } = useAuth0();
   const email = user?.email;
   useEffect(() => {
-    const fetchIssues = async () => {
-      try {
-        const res = await api.get(  `/dashboard?testEmail=${email}`);
-        const apiData = res.data;
+  if (!email) return; // skip fetch until Auth0 provides email
 
-        const transformedIssues = (apiData.issues || []).map((issue, idx) => ({
-          id: issue._id,
-          tenantName: "N/A", 
-          property: "N/A", 
-          date: new Date(issue.createdAt).toISOString().split("T")[0],
-          subject: issue.title,
-          message: issue.description,
-          priority: issue.priority || "Low",
-          status: issue.status || "Pending",
-        }));
+  const fetchIssues = async () => {
+    try {
+      const res = await api.get(`/dashboard?testEmail=${email}`);
+      const apiData = res.data;
 
-        setMessages(transformedIssues);
-      } catch (error) {
-        console.error("Failed to fetch issues:", error);
-      }
-    };
+      const transformedIssues = (apiData.issues || []).map((issue) => ({
+        id: issue._id,
+        tenantName: issue.tenantName || "N/A",  // using server data if present
+        property: issue.property || "N/A",
+        date: new Date(issue.createdAt).toISOString().split("T")[0],
+        subject: issue.title,
+        message: issue.description,
+        priority: issue.priority || "Low",
+        status: issue.status || "Pending",
+        replies: issue.replies || []
+      }));
 
-    fetchIssues();
-  }, []);
+      setMessages(transformedIssues);
+    } catch (error) {
+      console.error("Failed to fetch issues:", error);
+    }
+  };
+
+  fetchIssues();
+}, [email]); // ensures fetch runs when Auth0 email is available
+
 
   const toggleOpen = (id) => {
     setOpenId((prev) => (prev === id ? null : id));
@@ -61,27 +65,70 @@ const Communication = () => {
     setReplies((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleStatusChange = (id, newStatus, e) => {
-    e.stopPropagation();
-    setMessages((prev) =>
-      prev.map((msg) => (msg.id === id ? { ...msg, status: newStatus } : msg))
-    );
-  };
+const handleStatusChange = async (id, newStatus, e) => {
+  e.stopPropagation();
+  try {
+    const res = await api.post(`/tenant/update-issue-status/${id}`, { status: newStatus.toLowerCase() });
+    if (res.data.success) {
+      setMessages((prev) => {
+        const updatedMessages = prev.map((msg) =>
+          msg.id === id ? { ...msg, status: newStatus } : msg
+        );
+        console.log("Updated messages state after status change:", updatedMessages);
+        return [...updatedMessages]; // force fresh array so React re-renders with new status
+      });
+    } else {
+      console.error("Failed to update status:", res.data.message);
+      alert("Failed to update status: " + res.data.message);
+    }
+  } catch (error) {
+    console.error("Error updating status:", error);
+    alert("Error updating status.");
+  }
+};
 
-  const handleReplySubmit = (id) => {
+
+
+
+  const handleReplySubmit = async (id) => {
     if (!replies[id]?.trim()) {
       alert("Please enter a reply message.");
       return;
     }
 
-    console.log(`Reply sent for message ${id}:`, replies[id]);
-    alert(
-      `Reply sent to ${messages.find((m) => m.id === id)?.tenantName}:\n\n${
-        replies[id]
-      }`
-    );
-    setReplies((prev) => ({ ...prev, [id]: "" }));
-    setShowReplyForm((prev) => ({ ...prev, [id]: false }));
+    try {
+      // Call the reply API
+      const res = await api.post(`/tenant/reply-to-issue/${id}`, {
+        content: replies[id],
+        sender: email || "Admin" // Use admin email or identifier
+      });
+      if (res.data.success) {
+        console.log(`Reply sent for issue ${id}:`, replies[id]);
+        alert(`Reply sent to ${messages.find((m) => m.id === id)?.tenantName}:\n\n${replies[id]}`);
+        setReplies((prev) => ({ ...prev, [id]: "" }));
+        setShowReplyForm((prev) => ({ ...prev, [id]: false }));
+        const fetchRes = await api.get(`/dashboard?testEmail=${email}`);
+        const apiData = fetchRes.data;
+        const transformedIssues = (apiData.issues || []).map((issue, idx) => ({
+          id: issue._id,
+          tenantName: issue.tenantName || "N/A",
+          property: issue.property || "N/A",
+          date: new Date(issue.createdAt).toISOString().split("T")[0],
+          subject: issue.title,
+          message: issue.description,
+          priority: issue.priority || "Low",
+          status: issue.status || "Pending",
+          replies: issue.replies || []
+        }));
+        setMessages(transformedIssues);
+      } else {
+        console.error("Failed to send reply:", res.data.message);
+        alert("Failed to send reply: " + res.data.message);
+      }
+    } catch (error) {
+      console.error("Error sending reply:", error);
+      alert("Error sending reply.");
+    }
   };
 
   const filteredMessages = messages.filter((msg) => {
@@ -255,20 +302,17 @@ const Communication = () => {
                       </span>
                     </td>
                     <td className="px-2 py-2 md:px-4 md:py-3">
-                      <select
-                        value={msg.status}
-                        onChange={(e) =>
-                          handleStatusChange(msg.id, e.target.value, e)
-                        }
-                        className={`text-xs px-1 py-0.5 md:px-2 md:py-1 rounded-full font-medium border cursor-pointer ${getStatusBadge(
-                          msg.status
-                        )}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Resolved">Resolved</option>
-                      </select>
+                  <select
+  value={msg.status} // updated status from latest messages state
+  onChange={(e) => handleStatusChange(msg.id, e.target.value, e)}
+  className={`text-xs px-1 py-0.5 md:px-2 md:py-1 rounded-full font-medium border cursor-pointer ${getStatusBadge(msg.status)}`}
+  onClick={(e) => e.stopPropagation()}
+>
+  <option value="Pending">Pending</option>
+  <option value="In Progress">In Progress</option>
+  <option value="Resolved">Resolved</option>
+</select>
+
                     </td>
                     <td className="px-2 py-2 md:px-4 md:py-3">
                       <div className="flex items-center gap-1 md:gap-2">

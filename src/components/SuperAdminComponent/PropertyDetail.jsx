@@ -7,14 +7,23 @@ import api from "../../Pages/utils/axios";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useForm } from "react-hook-form";
 import AddUnitForm from "../SuperAdminComponent/AddUnitForm";
+import { FiEye } from "react-icons/fi";
+import ViewUnitModal from "../../components/ViewUnitDetails"; // adjust path as needed
 
-const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
+const PropertyDetail = ({
+  property,
+  setShowAddUnitForm,
+  showAddUnitForm,
+  unitSearchTerm,
+}) => {
   const [units, setUnits] = useState([]);
+  const [filteredUnits, setFilteredUnits] = useState([]); // State for filtered units
   const [loadingUnits, setLoadingUnits] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [editingUnit, setEditingUnit] = useState(null);
   const [showAddTenantForm, setShowAddTenantForm] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
+  const [showUnitDetailModal, setShowUnitDetailModal] = useState(false);
 
   const { user, isAuthenticated, isLoading } = useAuth0();
   const email = user?.email;
@@ -48,6 +57,7 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
           params: { testEmail: email },
         });
         setUnits(response.data.units || []);
+        setFilteredUnits(response.data.units || []); // Initialize filtered units
         setFetchError(null);
       } catch (error) {
         console.error(
@@ -63,14 +73,28 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
     if (property?._id && email) fetchUnits();
   }, [property?._id, email]);
 
+  // Filter units based on unitSearchTerm
+  useEffect(() => {
+    const filtered = units.filter(
+      (unit) =>
+        (unit.roomId || "")
+          .toLowerCase()
+          .includes((unitSearchTerm || "").toLowerCase()) ||
+        (unit.displayID || "")
+          .toLowerCase()
+          .includes((unitSearchTerm || "").toLowerCase())
+    );
+    setFilteredUnits(filtered);
+  }, [unitSearchTerm, units]);
+
   const reloadUnits = async () => {
     try {
       const response = await api.get(`/unit/property/${property._id}`, {
         params: { testEmail: email },
       });
       setUnits(response.data.units || []);
+      setFilteredUnits(response.data.units || []); // Update filtered units on reload
     } catch (error) {
-      
       setFetchError("Failed to reload units after update. Please refresh.");
     }
   };
@@ -152,6 +176,14 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
       );
     }
   };
+
+const handleViewUnit = (unit) => {
+  console.log("Viewing Unit:", unit); // ✅ log this
+  setSelectedUnit(unit);
+  setShowUnitDetailModal(true);
+};
+
+
 
   return (
     <div className="space-y-8">
@@ -410,7 +442,7 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
               {property.name}
             </h2>
             <p className="text-blue-100 text-sm sm:text-base">
-              Property #{property.propertyNo || "N/A"}
+              Display ID #{property.displayID || "N/A"}
             </p>
           </div>
         </div>
@@ -422,47 +454,46 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
 
       {/* Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-  <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
-    <div className="flex items-center gap-3 sm:gap-4">
-      <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
-        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+        <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+            </div>
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
+                {units.length}
+              </p>
+              <p className="text-sm sm:text-base text-gray-600">Total Units</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+              <User className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+            </div>
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
+                {units.filter((unit) => unit.isOccupied).length}
+              </p>
+              <p className="text-sm sm:text-base text-gray-600">Occupied</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+              <Home className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+            </div>
+            <div>
+              <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
+                {units.filter((unit) => !unit.isOccupied).length}
+              </p>
+              <p className="text-sm sm:text-base text-gray-600">Vacant</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <div>
-        <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-          {units.length}
-        </p>
-        <p className="text-sm sm:text-base text-gray-600">Total Units</p>
-      </div>
-    </div>
-  </div>
-  <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
-    <div className="flex items-center gap-3 sm:gap-4">
-      <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
-        <User className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-      </div>
-      <div>
-        <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-          {units.filter((unit) => unit.isOccupied).length}
-        </p>
-        <p className="text-sm sm:text-base text-gray-600">Occupied</p>
-      </div>
-    </div>
-  </div>
-  <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg border border-gray-100">
-    <div className="flex items-center gap-3 sm:gap-4">
-      <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
-        <Home className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-      </div>
-      <div>
-        <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-          {units.filter((unit) => !unit.isOccupied).length}
-        </p>
-        <p className="text-sm sm:text-base text-gray-600">Vacant</p>
-      </div>
-    </div>
-  </div>
-</div>
-
 
       {/* Units Table */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
@@ -483,11 +514,13 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
           <div className="p-12 text-center text-red-500">
             <p>{fetchError}</p>
           </div>
-        ) : units.length === 0 ? (
+        ) : filteredUnits.length === 0 ? (
           <div className="p-12 text-center">
             <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-lg">
-              No units added to this property yet.
+              {unitSearchTerm
+                ? "No units match your search."
+                : "No units added to this property yet."}
             </p>
           </div>
         ) : (
@@ -496,6 +529,7 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
               <thead className="bg-gray-50 text-gray-700 text-xs uppercase">
                 <tr>
                   <th className="px-6 py-4">Unit Number</th>
+                  <th className="px-6 py-4">Display ID</th>
                   <th className="px-6 py-4">Floor</th>
                   <th className="px-6 py-4">Rent</th>
                   <th className="px-6 py-4">Status</th>
@@ -503,16 +537,20 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {units.map((unit) => (
+                {filteredUnits.map((unit) => (
                   <tr key={unit._id}>
                     <td className="px-6 py-4">{unit.roomId || "N/A"}</td>
+                    <td className="px-6 py-4">{unit.displayID || "N/A"}</td>
                     <td className="px-6 py-4">{unit.floor ?? "N/A"}</td>
                     <td className="px-6 py-4">₹{unit.rentCost ?? "0"}</td>
                     <td className="px-6 py-4">
                       {unit.isOccupied ? "Occupied" : "Vacant"}
                     </td>
-
                     <td className="px-6 py-4 flex gap-2">
+                      <FiEye
+                        className="text-gray-700 hover:text-blue-500 h-5 w-5 cursor-pointer"
+                        onClick={() => handleViewUnit(unit)}
+                      />
                       <FaRegEdit
                         className="text-blue-600 hover:underline h-5 w-5 cursor-pointer"
                         onClick={() => handleEditUnit(unit)}
@@ -533,6 +571,12 @@ const PropertyDetail = ({ property, setShowAddUnitForm, showAddUnitForm }) => {
           </div>
         )}
       </div>
+      <ViewUnitModal
+  isOpen={showUnitDetailModal}
+  onClose={() => setShowUnitDetailModal(false)}
+  unit={selectedUnit}
+/>
+
     </div>
   );
 };

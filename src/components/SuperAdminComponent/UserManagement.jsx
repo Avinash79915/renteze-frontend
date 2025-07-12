@@ -16,11 +16,11 @@ const UserManagement = () => {
   const [admins, setAdmins] = useState([
     {
       id: "1",
-      name: "John Smith",
-      email: "john.smith@company.com",
+      name: "aviansh",
+      email: "avi ks.smith@company.com",
       role: "Property Admin",
       status: "Active",
-      assignedProperties: ["Downtown Office", "Warehouse A"],
+      assignedProperties: [" Office", "Warehouse A="],
       joinDate: "2024-01-15",
       lastLogin: "2024-06-14",
     },
@@ -47,14 +47,10 @@ const UserManagement = () => {
   ]);
 
   const [properties] = useState([
-    "Downtown Office",
-    "Warehouse A",
-    "Mall Complex",
-    "Retail Store B",
-    "Industrial Park",
-    "Corporate HQ",
-    "Distribution Center",
-    "Shopping Plaza",
+    { _id: "662fd14b68e5c2d1e55f5a8d", name: "Downtown Office" },
+    { _id: "662fd14b68e5c2d1e55f5a8e", name: "Warehouse A" },
+    { _id: "662fd14b68e5c2d1e55f5a8f", name: "Mall Complex" },
+    { _id: "662fd14b68e5c2d1e55f5a90", name: "Retail Store B" },
   ]);
 
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -86,23 +82,50 @@ const UserManagement = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const handleInviteAdmin = () => {
-    if (!inviteForm.name || !inviteForm.email) return;
+  const handleInviteAdmin = async () => {
+    if (!inviteForm.name || !inviteForm.email) {
+      alert("Please provide both name and email.");
+      return;
+    }
 
-    const newAdmin = {
-      id: Date.now().toString(),
-      name: inviteForm.name,
-      email: inviteForm.email,
-      role: "Property Admin",
-      status: "Active",
-      assignedProperties: inviteForm.selectedProperties,
-      joinDate: new Date().toISOString().split("T")[0],
-      lastLogin: "Never",
-    };
+    try {
+      const API_URL = "http://localhost:3000"; 
 
-    setAdmins([...admins, newAdmin]);
-    setInviteForm({ name: "", email: "", selectedProperties: [] });
-    setShowInviteModal(false);
+      const response = await fetch(`${API_URL}/invite-admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: inviteForm.name.trim(),
+          email: inviteForm.email.trim(),
+          phone: inviteForm.phone || "",
+          assignedProperties: Array.isArray(inviteForm.selectedProperties)
+            ? inviteForm.selectedProperties
+            : [],
+        }),
+      });
+
+      if (!response.ok) {
+        let errMessage = "Unknown error occurred";
+        try {
+          const err = await response.json();
+          errMessage = err.message || errMessage;
+        } catch (jsonErr) {
+          console.error("Failed to parse backend error response:", jsonErr);
+        }
+        console.error("Full response object:", response);
+        alert(`Failed to invite admin: ${errMessage}`);
+        return;
+      }
+
+      alert("✅ Admin invited successfully. Email has been sent!");
+      setInviteForm({ name: "", email: "", selectedProperties: [] });
+      setShowInviteModal(false);
+    } catch (error) {
+      console.error("Error inviting admin:", error);
+      alert(
+        "❌ An unexpected error occurred while inviting admin. Check console for details."
+      );
+    }
   };
 
   const handleEditAdmin = () => {
@@ -233,9 +256,7 @@ const UserManagement = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Admins</p>
-              <p className="text-2xl font-bold text-black">
-                {admins.length}
-              </p>
+              <p className="text-2xl font-bold text-black">{admins.length}</p>
             </div>
             <User className="w-8 h-8 text-[#1652A1]" />
           </div>
@@ -368,13 +389,13 @@ const UserManagement = () => {
                       >
                         <Edit3 className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
-                      <button
+                      {/* <button
                         onClick={() => openAssignModal(admin)}
                         className="text-[#1652A1] hover:text-green-900 p-1 rounded hover:bg-green-50"
                         title="Assign Properties"
                       >
                         <Building className="w-3 h-3 md:w-4 md:h-4" />
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => handleRemoveAdmin(admin.id)}
                         className="text-[#1652A1] hover:text-red-900 p-1 rounded hover:bg-red-50"
@@ -526,27 +547,41 @@ const UserManagement = () => {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
+                <input
+                  type="text"
+                  value={inviteForm.phone}
+                  onChange={(e) =>
+                    setInviteForm({ ...inviteForm, phone: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter phone number (optional)"
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Assign Properties
                 </label>
                 <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
                   {properties.map((property) => (
                     <label
-                      key={property}
+                      key={property._id}
                       className="flex items-center mb-2 cursor-pointer"
                     >
                       <input
                         type="checkbox"
                         checked={inviteForm.selectedProperties.includes(
-                          property
+                          property._id
                         )}
                         onChange={() =>
-                          togglePropertySelection(property, "invite")
+                          togglePropertySelection(property._id, "invite")
                         }
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                       <span className="ml-2 text-sm text-gray-700">
-                        {property}
+                        {property.name}
                       </span>
                     </label>
                   ))}
@@ -573,7 +608,7 @@ const UserManagement = () => {
 
       {/* Edit Admin Modal */}
       {showEditModal && selectedAdmin && (
-<div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Edit Admin</h3>
             <div className="space-y-4">
@@ -653,61 +688,6 @@ const UserManagement = () => {
               </button>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Assign Properties Modal */}
-      {showAssignModal && selectedAdmin && (
-<div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">
-              Assign Properties to {selectedAdmin.name}
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Properties
-                </label>
-                <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
-                  {properties.map((property) => (
-                    <label
-                      key={property}
-                      className="flex items-center mb-2 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={editForm.selectedProperties.includes(property)}
-                        onChange={() =>
-                          togglePropertySelection(property, "edit")
-                        }
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        {property}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Selected: {editForm.selectedProperties.length} properties
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handlePropertyAssignment}
-                className="flex-1 bg-[#1652A1]  text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Update Assignment
-              </button>
-              <button
-                onClick={() => setShowAssignModal(false)}
                 className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors"
               >
                 Cancel

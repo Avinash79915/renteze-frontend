@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Search, Home, ArrowLeft } from "lucide-react";
-import axios from "axios";
-
+import api from "../../Pages/utils/axios";
 import PropertyCard from "./AdminPropertyCard";
 import PropertyForm from "./PropertyForm";
 import PropertyDetail from "./PropertyDetail";
-import api from "../../Pages/utils/axios";
 import { useAuth0 } from "@auth0/auth0-react";
 
 const PropertyListing = () => {
@@ -13,10 +11,11 @@ const PropertyListing = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeProperty, setActiveProperty] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [unitSearchTerm, setUnitSearchTerm] = useState(""); // 🔹 New
   const [loading, setLoading] = useState(true);
   const [showAddUnitForm, setShowAddUnitForm] = useState(false);
 
-  const { user, isAuthenticated, isLoading } = useAuth0();
+  const { user } = useAuth0();
   const email = user?.email;
 
   const reloadProperties = async () => {
@@ -50,24 +49,18 @@ const PropertyListing = () => {
     reloadProperties();
   }, []);
 
-  const filteredProperties = Array.isArray(properties)
-    ? properties.filter(
-        (property) =>
-          property.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          property.address?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+  const filteredProperties = properties.filter(
+    (property) =>
+      property.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      property.address?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleDeleteProperty = async (propertyId) => {
     if (window.confirm("Are you sure you want to delete this property?")) {
       try {
         await api.delete(`/dashboard/${propertyId}`);
-        setProperties((prev) =>
-          prev.filter((property) => property._id !== propertyId)
-        );
-        if (activeProperty?._id === propertyId) {
-          setActiveProperty(null);
-        }
+        setProperties((prev) => prev.filter((p) => p._id !== propertyId));
+        if (activeProperty?._id === propertyId) setActiveProperty(null);
       } catch (error) {
         console.error("Failed to delete property:", error);
       }
@@ -114,29 +107,36 @@ const PropertyListing = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search properties by name or address..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder={
+              activeProperty
+                ? "Search units by unit number or floor..."
+                : "Search properties by name or address..."
+            }
+            value={activeProperty ? unitSearchTerm : searchTerm}
+            onChange={(e) =>
+              activeProperty
+                ? setUnitSearchTerm(e.target.value)
+                : setSearchTerm(e.target.value)
+            }
             className="w-full pl-10 pr-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-            autoFocus
           />
         </div>
       </div>
 
       {/* Add Property Form */}
       {showAddForm && (
-        <PropertyForm
-          setShowAddForm={setShowAddForm}
-          setProperties={setProperties}
-        />
+        <PropertyForm setShowAddForm={setShowAddForm} setProperties={setProperties} />
       )}
 
-      {/* Property Detail View */}
+      {/* Property Detail */}
       {activeProperty ? (
         <div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
             <button
-              onClick={() => setActiveProperty(null)}
+              onClick={() => {
+                setActiveProperty(null);
+                setUnitSearchTerm(""); // reset unit search on back
+              }}
               className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm md:text-base"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -150,10 +150,11 @@ const PropertyListing = () => {
             showAddUnitForm={showAddUnitForm}
             setShowAddUnitForm={setShowAddUnitForm}
             reloadProperties={reloadProperties}
+            unitSearchTerm={unitSearchTerm} // ✅ pass it
           />
         </div>
       ) : (
-        // Property Cards Grid
+        // Property Grid
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {loading ? (
             <div className="col-span-full text-center text-gray-500 py-12">
