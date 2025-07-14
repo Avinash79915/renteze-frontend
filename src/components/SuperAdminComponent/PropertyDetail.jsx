@@ -8,7 +8,8 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useForm } from "react-hook-form";
 import AddUnitForm from "../SuperAdminComponent/AddUnitForm";
 import { FiEye } from "react-icons/fi";
-import ViewUnitModal from "../../components/ViewUnitDetails"; // adjust path as needed
+import ViewUnitModal from "../../components/ViewUnitDetails";
+import TenantForm from "../TenantComponents/TenantForm";
 
 const PropertyDetail = ({
   property,
@@ -17,13 +18,14 @@ const PropertyDetail = ({
   unitSearchTerm,
 }) => {
   const [units, setUnits] = useState([]);
-  const [filteredUnits, setFilteredUnits] = useState([]); // State for filtered units
+  const [filteredUnits, setFilteredUnits] = useState([]);
   const [loadingUnits, setLoadingUnits] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [editingUnit, setEditingUnit] = useState(null);
   const [showAddTenantForm, setShowAddTenantForm] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [showUnitDetailModal, setShowUnitDetailModal] = useState(false);
+  const [tenantList, setTenantList] = useState({});
 
   const { user, isAuthenticated, isLoading } = useAuth0();
   const email = user?.email;
@@ -56,8 +58,15 @@ const PropertyDetail = ({
         const response = await api.get(`/unit/property/${property._id}`, {
           params: { testEmail: email },
         });
-        setUnits(response.data.units || []);
-        setFilteredUnits(response.data.units || []); // Initialize filtered units
+        const unitsData = response.data.units || [];
+        setUnits(unitsData);
+        setFilteredUnits(unitsData);
+
+        // Fetch tenants for all units
+        for (const unit of unitsData) {
+          await fetchTenantsForUnit(unit._id);
+        }
+
         setFetchError(null);
       } catch (error) {
         console.error(
@@ -72,6 +81,24 @@ const PropertyDetail = ({
 
     if (property?._id && email) fetchUnits();
   }, [property?._id, email]);
+
+  const fetchTenantsForUnit = async (unitId) => {
+    try {
+      const response = await api.get(`/tenant/unit/${unitId}`, {
+        params: { testEmail: email },
+      });
+      const tenants = response.data.tenants || [];
+      setTenantList((prev) => ({
+        ...prev,
+        [unitId]: tenants,
+      }));
+    } catch (error) {
+      console.error(
+        "Error fetching tenants:",
+        error.response?.data || error.message
+      );
+    }
+  };
 
   // Filter units based on unitSearchTerm
   useEffect(() => {
@@ -92,8 +119,14 @@ const PropertyDetail = ({
       const response = await api.get(`/unit/property/${property._id}`, {
         params: { testEmail: email },
       });
-      setUnits(response.data.units || []);
-      setFilteredUnits(response.data.units || []); // Update filtered units on reload
+      const unitsData = response.data.units || [];
+      setUnits(unitsData);
+      setFilteredUnits(unitsData);
+
+      // Re-fetch tenants for all units after reload
+      for (const unit of unitsData) {
+        await fetchTenantsForUnit(unit._id);
+      }
     } catch (error) {
       setFetchError("Failed to reload units after update. Please refresh.");
     }
@@ -177,13 +210,11 @@ const PropertyDetail = ({
     }
   };
 
-const handleViewUnit = (unit) => {
-  console.log("Viewing Unit:", unit); // ✅ log this
-  setSelectedUnit(unit);
-  setShowUnitDetailModal(true);
-};
-
-
+  const handleViewUnit = (unit) => {
+    console.log("Viewing Unit:", unit);
+    setSelectedUnit(unit);
+    setShowUnitDetailModal(true);
+  };
 
   return (
     <div className="space-y-8">
@@ -200,235 +231,15 @@ const handleViewUnit = (unit) => {
       )}
 
       {showAddTenantForm && selectedUnit && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          {/* Overlay with blur and semi-transparent black */}
-          <div
-            className="fixed inset-0 backdrop-blur-md bg-black/30"
-            onClick={() => {
-              setShowAddTenantForm(false);
-              setSelectedUnit(null);
-              reset();
-            }}
-          ></div>
-          {/* Popup form */}
-          <div className="relative bg-white rounded-lg border border-gray-200 w-full max-w-2xl mx-4 shadow-xl max-h-[80vh] overflow-y-auto">
-            <div className="p-3 md:p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-semibold text-[#1652A1]">
-                  Add Tenant for Unit {selectedUnit.roomId || "N/A"}
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowAddTenantForm(false);
-                    setSelectedUnit(null);
-                    reset();
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <form
-              className="p-2 md:p-6"
-              onSubmit={handleSubmit(onSubmitTenant)}
-            >
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tenant Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      {...register("name", {
-                        required: "Name is required",
-                        minLength: {
-                          value: 2,
-                          message: "Name must be at least 2 characters",
-                        },
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                      autoFocus
-                    />
-                    {errors.name && (
-                      <p className="text-red-500 text-sm">
-                        {errors.name.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      {...register("email", {
-                        required: "Email is required",
-                        pattern: {
-                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                          message: "Invalid email address",
-                        },
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm">
-                        {errors.email.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      {...register("phone", {
-                        required: "Phone is required",
-                        pattern: {
-                          value: /^[0-9]{10}$/,
-                          message: "Phone number must be 10 digits",
-                        },
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                    {errors.phone && (
-                      <p className="text-red-500 text-sm">
-                        {errors.phone.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Monthly Rent <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      {...register("rent", {
-                        required: "Rent is required",
-                        min: {
-                          value: 1,
-                          message: "Rent must be greater than 0",
-                        },
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                    {errors.rent && (
-                      <p className="text-red-500 text-sm">
-                        {errors.rent.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Advance <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      {...register("advance", {
-                        required: "Advance is required",
-                        min: {
-                          value: 0,
-                          message: "Advance cannot be negative",
-                        },
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                    {errors.advance && (
-                      <p className="text-red-500 text-sm">
-                        {errors.advance.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Annual Increment (%){" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      {...register("annualIncrement", {
-                        required: "Annual increment is required",
-                        min: {
-                          value: 0,
-                          message: "Annual increment cannot be negative",
-                        },
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                    {errors.annualIncrement && (
-                      <p className="text-red-500 text-sm">
-                        {errors.annualIncrement.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Agreement Start Date{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      {...register("agreementStartDate", {
-                        required: "Start date is required",
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                    {errors.agreementStartDate && (
-                      <p className="text-red-500 text-sm">
-                        {errors.agreementStartDate.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Agreement End Date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      {...register("agreementEndDate", {
-                        required: "End date is required",
-                        validate: (value) =>
-                          value > watch("agreementStartDate") ||
-                          "End date must be after start date",
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
-                    />
-                    {errors.agreementEndDate && (
-                      <p className="text-red-500 text-sm">
-                        {errors.agreementEndDate.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-2 md:p-6 border-t border-gray-200">
-                <div className="flex justify-end gapsm-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAddTenantForm(false);
-                      setSelectedUnit(null);
-                      reset();
-                    }}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-[#1652A1] text-white rounded-lg hover:bg-[#134a8e] flex items-center gap-2"
-                  >
-                    <Save className="w-4 h-4" />
-                    Add Tenant
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
+        <TenantForm
+          unit={selectedUnit}
+          property={property}
+          onClose={() => {
+            setShowAddTenantForm(false);
+            setSelectedUnit(null);
+            reloadUnits();
+          }}
+        />
       )}
 
       {/* Property Header */}
@@ -474,7 +285,7 @@ const handleViewUnit = (unit) => {
             </div>
             <div>
               <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-                {units.filter((unit) => unit.isOccupied).length}
+                {units.filter((unit) => tenantList[unit._id]?.length > 0).length}
               </p>
               <p className="text-sm sm:text-base text-gray-600">Occupied</p>
             </div>
@@ -487,7 +298,7 @@ const handleViewUnit = (unit) => {
             </div>
             <div>
               <p className="text-xl sm:text-2xl font-bold text-[#1652A1]">
-                {units.filter((unit) => !unit.isOccupied).length}
+                {units.filter((unit) => !tenantList[unit._id]?.length).length}
               </p>
               <p className="text-sm sm:text-base text-gray-600">Vacant</p>
             </div>
@@ -533,50 +344,55 @@ const handleViewUnit = (unit) => {
                   <th className="px-6 py-4">Floor</th>
                   <th className="px-6 py-4">Rent</th>
                   <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Tenant Name</th>
                   <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredUnits.map((unit) => (
-                  <tr key={unit._id}>
-                    <td className="px-6 py-4">{unit.roomId || "N/A"}</td>
-                    <td className="px-6 py-4">{unit.displayID || "N/A"}</td>
-                    <td className="px-6 py-4">{unit.floor ?? "N/A"}</td>
-                    <td className="px-6 py-4">₹{unit.rentCost ?? "0"}</td>
-                    <td className="px-6 py-4">
-                      {unit.isOccupied ? "Occupied" : "Vacant"}
-                    </td>
-                    <td className="px-6 py-4 flex gap-2">
-                      <FiEye
-                        className="text-gray-700 hover:text-blue-500 h-5 w-5 cursor-pointer"
-                        onClick={() => handleViewUnit(unit)}
-                      />
-                      <FaRegEdit
-                        className="text-blue-600 hover:underline h-5 w-5 cursor-pointer"
-                        onClick={() => handleEditUnit(unit)}
-                      />
-                      <MdOutlineDeleteForever
-                        className="text-red-600 hover:underline h-5 w-5 cursor-pointer"
-                        onClick={() => handleDeleteUnit(unit._id)}
-                      />
-                      <HiOutlineUserAdd
-                        className="text-green-600 hover:underline h-5 w-5 cursor-pointer"
-                        onClick={() => handleAddTenant(unit)}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                {filteredUnits.map((unit) => {
+                  const tenants = tenantList[unit._id] || [];
+                  const tenantName = tenants.length > 0 ? tenants[0].name : "None";
+                  return (
+                    <tr key={unit._id}>
+                      <td className="px-6 py-4">{unit.roomId || "N/A"}</td>
+                      <td className="px-6 py-4">{unit.displayID || "N/A"}</td>
+                      <td className="px-6 py-4">{unit.floor ?? "N/A"}</td>
+                      <td className="px-6 py-4">₹{unit.rentCost ?? "0"}</td>
+                      <td className="px-6 py-4">
+                        {tenants.length > 0 ? "Occupied" : "Vacant"}
+                      </td>
+                      <td className="px-6 py-4">{tenantName}</td>
+                      <td className="px-6 py-4 flex gap-2">
+                        <FiEye
+                          className="text-gray-700 hover:text-blue-500 h-5 w-5 cursor-pointer"
+                          onClick={() => handleViewUnit(unit)}
+                        />
+                        <FaRegEdit
+                          className="text-blue-600 hover:underline h-5 w-5 cursor-pointer"
+                          onClick={() => handleEditUnit(unit)}
+                        />
+                        <MdOutlineDeleteForever
+                          className="text-red-600 hover:underline h-5 w-5 cursor-pointer"
+                          onClick={() => handleDeleteUnit(unit._id)}
+                        />
+                        <HiOutlineUserAdd
+                          className="text-green-600 hover:underline h-5 w-5 cursor-pointer"
+                          onClick={() => handleAddTenant(unit)}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
       <ViewUnitModal
-  isOpen={showUnitDetailModal}
-  onClose={() => setShowUnitDetailModal(false)}
-  unit={selectedUnit}
-/>
-
+        isOpen={showUnitDetailModal}
+        onClose={() => setShowUnitDetailModal(false)}
+        unit={selectedUnit}
+      />
     </div>
   );
 };

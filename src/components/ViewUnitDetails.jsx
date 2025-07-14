@@ -21,7 +21,6 @@ const ViewUnitModal = ({ isOpen, onClose, unit }) => {
         const response = await api.get(`/unit/${unit._id}`, {
           params: { testEmail: email },
         });
-
         setUnitDetail(response.data.data?.unit || null);
       } catch (error) {
         console.error("Error fetching unit detail:", error);
@@ -71,9 +70,12 @@ const ViewUnitModal = ({ isOpen, onClose, unit }) => {
               <p><strong>Room Area:</strong> {unitDetail.roomArea || "N/A"} sq ft</p>
               <p><strong>BESCOM Number:</strong> {unitDetail.bescomNumber || "N/A"}</p>
               <p><strong>Status:</strong> {unitDetail.isOccupied ? "Occupied" : "Vacant"}</p>
-              <p><strong>Water Connection:</strong> {unitDetail.hasWaterConnection ? "Yes" : "No"}</p>
-              <p><strong>Independent Toilet:</strong> {unitDetail.hasIndependentToilet ? "Yes" : "No"}</p>
-              <p><strong>Description:</strong> {unitDetail.description || "N/A"}</p>
+              <p><strong>Water Meter Number:</strong> {unitDetail.waterMeterNo || "N/A"}</p>
+              <p><strong>Electric Meter Number:</strong> {unitDetail.electricMeterNo || "N/A"}</p>
+              <p><strong>Water Connection Type:</strong> {unitDetail.waterConnectionType || "N/A"}</p>
+              <p><strong>Toilet Type:</strong> {unitDetail.toiletType || "N/A"}</p>
+              <p><strong>Amenities:</strong> {unitDetail.amenities || "N/A"}</p>
+              <p><strong>Unit History:</strong> {unitDetail.unitHistory || "N/A"}</p>
             </>
           ) : (
             <p className="text-center text-gray-500">No unit data available.</p>

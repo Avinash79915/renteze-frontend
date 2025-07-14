@@ -318,6 +318,7 @@ const TenantManagement = () => {
           properties={properties}
           handleAddTenant={handleAddTenant}
           setShowAddForm={setShowAddForm}
+          onClose={() => setShowAddForm(false)}
         />
       )}
 
@@ -514,6 +515,8 @@ const TenantManagement = () => {
           properties={properties}
           handleEditTenant={handleEditTenant}
           setShowEditModal={setShowEditModal}
+              onClose={() => setShowEditModal(false)}
+
         />
       )}
 
