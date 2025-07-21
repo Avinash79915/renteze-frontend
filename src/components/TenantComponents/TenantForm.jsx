@@ -4,7 +4,13 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { Save, X } from "lucide-react";
 import api from "../../Pages/utils/axios";
 
-const TenantForm = ({ onClose }) => {
+const TenantForm = ({
+  isEdit = false,
+  tenantForm,
+  handleAddTenant,
+  handleEditTenant,
+  onClose,
+}) => {
   const [properties, setProperties] = useState([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,6 +24,7 @@ const TenantForm = ({ onClose }) => {
     watch,
     formState: { errors },
     reset,
+    setValue,
   } = useForm({
     defaultValues: {
       name: "",
@@ -40,6 +47,35 @@ const TenantForm = ({ onClose }) => {
 
   const selectedPropertyId = watch("property");
 
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (isEdit && tenantForm) {
+      setValue("name", `${tenantForm.firstName} ${tenantForm.lastName}`.trim());
+      setValue("email", tenantForm.email);
+      setValue("phone", tenantForm.primaryPhone);
+      setValue("nameOfBusiness", tenantForm.businessNature);
+      setValue("natureOfBusiness", tenantForm.businessNature);
+      setValue("rent", tenantForm.amount);
+      setValue("advance", tenantForm.advanceAmount);
+      setValue("property", tenantForm.propertyId);
+      setValue("unit", tenantForm.unit);
+      setValue("agreementStartDate", tenantForm.joinDate);
+      setValue(
+        "agreementEndDate",
+        tenantForm.agreementEndDate ||
+          new Date(
+            new Date(tenantForm.joinDate).setMonth(
+              new Date(tenantForm.joinDate).getMonth() +
+                parseInt(tenantForm.duration || 0)
+            )
+          )
+            .toISOString()
+            .split("T")[0]
+      );
+      setValue("annualIncrement", tenantForm.annualIncrement || 0);
+    }
+  }, [isEdit, tenantForm, setValue]);
+
   // Fetch properties
   useEffect(() => {
     const fetchProperties = async () => {
@@ -55,7 +91,7 @@ const TenantForm = ({ onClose }) => {
     fetchProperties();
   }, [email]);
 
-  // Fetch units for selected property
+  // Fetch units based on selected property
   useEffect(() => {
     const fetchUnits = async () => {
       if (!selectedPropertyId) {
@@ -78,57 +114,60 @@ const TenantForm = ({ onClose }) => {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
+      const paymentHistory = data.paymentAmount
+        ? [
+            {
+              amount: Number(data.paymentAmount),
+              invoiceMonth: data.invoiceMonth.match(/^[A-Za-z]+ \d{4}$/)
+                ? data.invoiceMonth
+                : new Date().toLocaleString("default", {
+                    month: "long",
+                    year: "numeric",
+                  }),
+              invoiceType: data.invoiceType || "Rent",
+              status: "Unpaid",
+              paidOn: null,
+              paymentMethod: "-",
+            },
+          ]
+        : [];
+
+      // Find the selected property name
+      const selectedProperty = properties.find((p) => p._id === data.property);
+      const propertyName = selectedProperty ? selectedProperty.name : "Unknown Property";
+
       const payload = {
         name: data.name,
         email: data.email,
         phone: data.phone,
-        unit: data.unit,
-        nameOfBusiness: data.nameOfBusiness || "",
-        natureOfBusiness: data.natureOfBusiness || "",
-        rent: data.rent,
-        advance: data.advance,
+        nameOfBusiness: data.nameOfBusiness,
+        natureOfBusiness: data.natureOfBusiness,
+        rent: Number(data.rent),
+        advance: Number(data.advance),
         agreementStartDate: data.agreementStartDate,
         agreementEndDate: data.agreementEndDate,
-        annualIncrement: data.annualIncrement,
-        paymentHistory: [
-          {
-            amount: Number(data.paymentAmount),
-            invoiceMonth: data.invoiceMonth.match(/^[A-Za-z]+ \d{4}$/)
-              ? `${
-                  data.invoiceMonth.split(" ")[0].charAt(0).toUpperCase() +
-                  data.invoiceMonth.split(" ")[0].slice(1).toLowerCase()
-                } ${data.invoiceMonth.split(" ")[1]}`
-              : new Date().toLocaleString("default", {
-                  month: "long",
-                  year: "numeric",
-                }),
-            invoiceType: data.invoiceType || "Rent",
-            status: "Unpaid",
-            paidOn: null,
-            paymentMethod: "-",
-          },
-        ],
+        annualIncrement: Number(data.annualIncrement),
+        paymentHistory,
+        property: data.property,
+        propertyName, // Include property name for TenantManagement
+        unit: data.unit,
       };
 
-      console.log("📤 Payload sent to backend:", payload);
+      if (isEdit) {
+        await handleEditTenant(payload);
+      } else {
+        await handleAddTenant(payload);
+      }
 
-      const response = await api.post(
-        `/property/${data.property}/tenant?testEmail=${email}`,
-        payload,
-        { headers: { "Content-Type": "application/json" } }
-      );
-
-      alert("✅ Tenant added successfully!");
-      console.log("Tenant added:", response.data);
+      alert(isEdit ? "✅ Tenant updated successfully!" : "✅ Tenant added successfully!");
+      onClose();
       reset();
-      onClose(false);
     } catch (error) {
-      console.error("❌ Failed to add tenant:", error);
+      console.error("❌ Error:", error);
       const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to add tenant. Please check your input and try again.";
-      alert(errorMessage);
+        error?.response?.data?.message || error.message || `Failed to ${isEdit ? "update" : "add"} tenant`;
+      alert(`❌ Error: ${errorMessage}`);
+      console.log("🔍 Full error response:", error.response?.data);
     } finally {
       setLoading(false);
     }
@@ -140,11 +179,11 @@ const TenantForm = ({ onClose }) => {
         <div className="p-3 md:p-6 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold text-[#1652A1]">
-              Add New Tenant
+              {isEdit ? "Edit Tenant" : "Add New Tenant"}
             </h3>
             <button
               onClick={() => {
-                onClose(false);
+                onClose();
                 reset();
               }}
               className="p-2 hover:bg-gray-100 rounded-lg"
@@ -239,8 +278,7 @@ const TenantForm = ({ onClose }) => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nature ofName of Business{" "}
-                  <span className="text-red-500">*</span>
+                  Nature of Business <span className="text-red-500">*</span>
                 </label>
                 <input
                   {...register("natureOfBusiness", {
@@ -259,7 +297,6 @@ const TenantForm = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Property & Unit */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -307,7 +344,6 @@ const TenantForm = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Rent & Advance */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -348,7 +384,6 @@ const TenantForm = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Agreement Dates & Increment */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -359,7 +394,7 @@ const TenantForm = ({ onClose }) => {
                   {...register("agreementStartDate", {
                     required: "Start date is required",
                   })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1652A1] focus:border-transparent"
                 />
                 {errors.agreementStartDate && (
                   <p className="text-red-500 text-sm">
@@ -410,7 +445,6 @@ const TenantForm = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Payment Details */}
             <div className="mt-6">
               <h4 className="text-lg font-semibold text-gray-700 mb-2">
                 Payment Details (Optional)
@@ -501,7 +535,7 @@ const TenantForm = ({ onClose }) => {
                 }`}
               >
                 <Save className="w-4 h-4" />
-                {loading ? "Submitting..." : "Add Tenant"}
+                {loading ? "Submitting..." : isEdit ? "Update Tenant" : "Add Tenant"}
               </button>
             </div>
           </div>

@@ -14,60 +14,73 @@ const statusColors = {
 const paymentStatusColors = {
   Paid: "bg-green-500 text-white",
   Unpaid: "bg-red-500 text-white",
+  Partial: "bg-yellow-500 text-white",
 };
 
 const Reports = () => {
   const [activeReport, setActiveReport] = useState("payment");
   const [tenantData, setTenantData] = useState([]);
   const [paymentData, setPaymentData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { user, isAuthenticated, isLoading } = useAuth0();
-  const email = user?.email;
 
- useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const response = await api.get(
-        `/tenants/owner-by-email?email=${user.email}`
-      );
-      const tenants = response.data.tenants || [];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await api.get(
+          `/tenants/owner-by-email?email=${user.email}`
+        );
+        const tenants = response.data.tenants || [];
 
-      // Tenant Report
-      const transformedTenants = tenants.map((tenant) => ({
-        name: tenant.name,
-        shop: tenant.unit?.roomId || "N/A",
-        property: tenant.unit?.propertyId?.name || "Unknown Property",
-        start: new Date(tenant.agreementStartDate).toLocaleDateString("en-GB"),
-        end: new Date(tenant.agreementEndDate).toLocaleDateString("en-GB"),
-        status: "Occupied",
-      }));
-      setTenantData(transformedTenants);
+        // Tenant Report
+        const transformedTenants = tenants.map((tenant) => ({
+          name: tenant.name,
+          shop: tenant.unit?.roomId || "N/A",
+          property: tenant.unit?.propertyId?.name || "Unknown Property",
+          start: new Date(tenant.agreementStartDate).toLocaleDateString(
+            "en-GB"
+          ),
+          end: new Date(tenant.agreementEndDate).toLocaleDateString("en-GB"),
+          status: "Occupied",
+        }));
+        setTenantData(transformedTenants);
 
-      // Payment Report
-      const transformedPayments = tenants.flatMap((tenant) =>
-        (tenant.paymentHistory || []).map((payment, index) => ({
-          id: `${tenant._id}-${index}`,
-          tenantName: tenant.name,
-          amount: `₹${payment.amount}`,
-          invoiceMonth: payment.invoiceMonth,
-          invoiceType: payment.invoiceType,
-          status: payment.status,
-          paidOn: payment.paidOn
-            ? new Date(payment.paidOn).toLocaleDateString("en-GB")
-            : "-",
-          paymentMethod: payment.paymentMethod || "-",
-        }))
-      );
-      setPaymentData(transformedPayments);
-    } catch (err) {
-      console.error("Error fetching report data:", err);
+        // Payment Report
+        const transformedPayments = tenants.flatMap((tenant) =>
+          (tenant.paymentHistory || []).map((payment, index) => ({
+            id: `${tenant._id}-${index}`,
+            tenantId: tenant._id,
+            tenantName: tenant.name,
+            amount: payment.amount,
+            invoiceMonth: payment.invoiceMonth,
+            invoiceType: payment.invoiceType,
+            status: payment.status,
+            paidOn: payment.paidOn
+              ? new Date(payment.paidOn).toLocaleDateString("en-GB")
+              : "-",
+            paymentMethod: payment.paymentMethod || "-",
+            paymentMode: payment.paymentMode || "Full",
+            notes: payment.notes || "-",
+
+            // ✅ ADD THESE FIELDS
+            rent: tenant.rent,
+            ownerEmail: tenant.ownerEmail,
+            paymentHistory: tenant.paymentHistory,
+          }))
+        );
+
+        setPaymentData(transformedPayments);
+      } catch (err) {
+        console.error("Error fetching report data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!isLoading && isAuthenticated && user?.email) {
+      fetchData();
     }
-  };
-
-  if (!isLoading && isAuthenticated && user?.email) {
-    fetchData();
-  }
-}, [isLoading, isAuthenticated, user?.email]);
-
+  }, [isLoading, isAuthenticated, user?.email]);
 
   return (
     <div className="p-2 md:p-6">
@@ -95,7 +108,11 @@ const Reports = () => {
         </button>
       </div>
 
-      {activeReport === "tenant" ? (
+      {loading ? (
+        <div className="text-center text-[#1652A1] font-semibold">
+          Loading reports...
+        </div>
+      ) : activeReport === "tenant" ? (
         <TenantReport tenantData={tenantData} statusColors={statusColors} />
       ) : (
         <PaymentReport

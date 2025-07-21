@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Users,
   Plus,
@@ -7,21 +7,9 @@ import {
   Eye,
   Search,
   Filter,
-  User,
-  Phone,
-  Mail,
-  Home,
-  FileText,
-  Download,
-  Calendar,
-  Bell,
-  MessageSquare,
-  Building,
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import TenantForm from "../TenantComponents/TenantForm";
-import { useEffect } from "react";
-import axios from "axios";
 import { useParams } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import api from "../../Pages/utils/axios";
@@ -29,10 +17,17 @@ import ViewTenantModal from "../ViewTenantModal";
 
 const TenantManagement = () => {
   const { unitId } = useParams();
-  const [tenants, setTenants] = useState([]); // ✅ add this line
   const { user, isAuthenticated, isLoading } = useAuth0();
   const email = user?.email;
+  const [tenants, setTenants] = useState([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
 
+  // Fetch tenants from the backend
   useEffect(() => {
     const fetchTenants = async () => {
       if (!email) return;
@@ -45,33 +40,29 @@ const TenantManagement = () => {
           id: t._id,
           firstName: t.name?.split(" ")[0] || t.name,
           lastName: t.name?.split(" ").slice(1).join(" ") || "",
-          age: "",
-          fatherHusbandName: "",
-          businessNature: t.natureOfBusiness,
-          primaryPhone: t.phone,
-          secondaryPhone: "",
-          email: t.email,
-          contractType: "Lease",
-          duration: `${Math.round(
-            (new Date(t.agreementEndDate) - new Date(t.agreementStartDate)) /
-              (1000 * 60 * 60 * 24 * 30)
-          )} months`,
-          amount: t.rent,
-          advanceAmount: t.advance,
-          property: t.unit.propertyId, // you can populate property name in backend
-          unit: t.unit.roomId,
+          email: t.email || "",
+          primaryPhone: t.phone || "",
+          businessNature: t.natureOfBusiness || "",
+          amount: t.rent || "",
+          advanceAmount: t.advance || "",
+          property: t.unit?.propertyId?.name || t.unit?.propertyId || "", // Extract name if propertyId is an object
+          propertyId: t.unit?.propertyId?._id || t.unit?.propertyId || "", // Store property ID for form
+          unit: t.unit?.roomId || "",
           status: t.rentStatus === "due" ? "Pending" : "Active",
-          joinDate: new Date(t.agreementStartDate).toISOString().split("T")[0],
-          waterType: "Individual",
-          powerType: "Individual",
-          gstRequired: "No",
-          address: {
-            doorNo: "",
-            street: "",
-            city: "",
-            state: "",
-            country: "India",
-          },
+          joinDate: t.agreementStartDate
+            ? new Date(t.agreementStartDate).toISOString().split("T")[0]
+            : "",
+          agreementEndDate: t.agreementEndDate
+            ? new Date(t.agreementEndDate).toISOString().split("T")[0]
+            : "",
+          annualIncrement: t.annualIncrement || 0,
+          contractType: t.contractType || "Lease",
+          duration: t.agreementEndDate
+            ? `${Math.round(
+                (new Date(t.agreementEndDate) - new Date(t.agreementStartDate)) /
+                  (1000 * 60 * 60 * 24 * 30)
+              )} months`
+            : "",
         }));
 
         setTenants(mappedTenants);
@@ -84,151 +75,113 @@ const TenantManagement = () => {
     fetchTenants();
   }, [email]);
 
-  const [properties] = useState([
-    "Palm Residency",
-    "Sky View Flats",
-    "Green Villas",
-    "Ocean Heights",
-    "Downtown Office",
-    "avinash ki property A",
-  ]);
-
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedTenant, setSelectedTenant] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [activeTab, setActiveTab] = useState("basic");
-
-  const [tenantForm, setTenantForm] = useState({
-    firstName: "",
-    lastName: "",
-    age: "",
-    fatherHusbandName: "",
-    businessNature: "",
-    primaryPhone: "",
-    secondaryPhone: "",
-    email: "",
-    contractType: "Lease",
-    duration: "",
-    amount: "",
-    advanceAmount: "",
-    property: "",
-    unit: "",
-    waterType: "Individual",
-    waterMeterNo: "",
-    waterCharges: "",
-    powerType: "Individual",
-    powerMeterNo: "",
-    powerCharges: "",
-    fixtures: "",
-    idProofType: "Aadhar",
-    gstNo: "",
-    gstRequired: "No",
-    panNo: "",
-    lateFeePerDay: "",
-    paymentMode: "Bank Transfer",
-    maintenanceCharges: "",
-    notes: "",
-    address: {
-      doorNo: "",
-      street: "",
-      city: "",
-      state: "",
-      country: "India",
+  // Handle adding a tenant
+  const handleAddTenant = useCallback(
+    async (payload) => {
+      try {
+        const response = await api.post(
+          `/property/${payload.property}/tenant?testEmail=${email}`,
+          payload
+        );
+        setTenants((prev) => [
+          ...prev,
+          {
+            id: response.data._id,
+            firstName: payload.name.split(" ")[0],
+            lastName: payload.name.split(" ").slice(1).join(" "),
+            email: payload.email,
+            primaryPhone: payload.phone,
+            businessNature: payload.natureOfBusiness,
+            amount: payload.rent,
+            advanceAmount: payload.advance,
+            property: payload.propertyName || "Unknown Property", // Use propertyName if available
+            propertyId: payload.property,
+            unit: payload.unit,
+            status: "Active",
+            joinDate: payload.agreementStartDate,
+            agreementEndDate: payload.agreementEndDate,
+            annualIncrement: payload.annualIncrement,
+            contractType: "Lease",
+            duration: payload.agreementEndDate
+              ? `${Math.round(
+                  (new Date(payload.agreementEndDate) -
+                    new Date(payload.agreementStartDate)) /
+                    (1000 * 60 * 60 * 24 * 30)
+                )} months`
+              : "",
+          },
+        ]);
+      } catch (error) {
+        throw error; // Let TenantForm handle the error
+      }
     },
-  });
+    [email]
+  );
 
-  const [vacationForm, setVacationForm] = useState({
-    noticeDate: "",
-    vacationDate: "",
-    reason: "",
-  });
+  // Handle editing a tenant
+  const handleEditTenant = useCallback(
+    async (payload) => {
+      try {
+        const response = await api.put(
+          `/tenants/${selectedTenant.id}?testEmail=${email}`,
+          payload
+        );
+        setTenants((prev) =>
+          prev.map((tenant) =>
+            tenant.id === selectedTenant.id
+              ? {
+                  ...tenant,
+                  firstName: payload.name.split(" ")[0],
+                  lastName: payload.name.split(" ").slice(1).join(" "),
+                  email: payload.email,
+                  primaryPhone: payload.phone,
+                  businessNature: payload.natureOfBusiness,
+                  amount: payload.rent,
+                  advanceAmount: payload.advance,
+                  property: payload.propertyName || tenant.property, // Use propertyName if available
+                  propertyId: payload.property,
+                  unit: payload.unit,
+                  joinDate: payload.agreementStartDate,
+                  agreementEndDate: payload.agreementEndDate,
+                  annualIncrement: payload.annualIncrement,
+                  status: payload.paymentHistory?.length
+                    ? payload.paymentHistory[0].status === "Unpaid"
+                      ? "Pending"
+                      : "Active"
+                    : tenant.status,
+                  duration: payload.agreementEndDate
+                    ? `${Math.round(
+                        (new Date(payload.agreementEndDate) -
+                          new Date(payload.agreementStartDate)) /
+                          (1000 * 60 * 60 * 24 * 30)
+                      )} months`
+                    : "",
+                }
+              : tenant
+          )
+        );
+        setShowEditModal(false);
+        setSelectedTenant(null);
+      } catch (error) {
+        throw error; // Let TenantForm handle the error
+      }
+    },
+    [selectedTenant, email]
+  );
 
-  // Memoize resetForm
-  const resetForm = useCallback(() => {
-    setTenantForm({
-      firstName: "",
-      lastName: "",
-      age: "",
-      fatherHusbandName: "",
-      businessNature: "",
-      primaryPhone: "",
-      secondaryPhone: "",
-      email: "",
-      contractType: "Lease",
-      duration: "",
-      amount: "",
-      advanceAmount: "",
-      property: "",
-      unit: "",
-      waterType: "Individual",
-      waterMeterNo: "",
-      waterCharges: "",
-      powerType: "Individual",
-      powerMeterNo: "",
-      powerCharges: "",
-      fixtures: "",
-      idProofType: "Aadhar",
-      gstNo: "",
-      gstRequired: "No",
-      panNo: "",
-      lateFeePerDay: "",
-      paymentMode: "Bank Transfer",
-      maintenanceCharges: "",
-      notes: "",
-      isSplitPayment: false,
-      splitStatus: "Pending",
-      address: {
-        doorNo: "",
-        street: "",
-        city: "",
-        state: "",
-        country: "India",
-      },
-    });
-  }, []);
-
-  // Memoize handleAddTenant
-  const handleAddTenant = useCallback(() => {
-    const newTenant = {
-      id: uuidv4(),
-      ...tenantForm,
-      status: "Active",
-      joinDate: new Date().toISOString().split("T")[0],
-    };
-    setTenants((prev) => [...prev, newTenant]);
-    resetForm();
-    setShowAddForm(false);
-  }, [tenantForm, resetForm]);
-
-  // Memoize handleEditTenant
-  const handleEditTenant = useCallback(() => {
-    setTenants((prev) =>
-      prev.map((tenant) =>
-        tenant.id === selectedTenant.id ? { ...tenant, ...tenantForm } : tenant
-      )
-    );
-    setShowEditModal(false);
-    setSelectedTenant(null);
-    resetForm();
-  }, [tenantForm, selectedTenant, resetForm]);
-
-  // Memoize openEditModal
+  // Open edit modal
   const openEditModal = useCallback((tenant) => {
     setSelectedTenant(tenant);
-    setTenantForm({ ...tenant });
     setShowEditModal(true);
   }, []);
 
-  // Memoize openViewModal
+  // Open view modal
   const openViewModal = useCallback((tenant) => {
     setSelectedTenant(tenant);
     setShowViewModal(true);
   }, []);
 
-  // Memoize handleDeleteTenant
+  // Delete tenant
   const handleDeleteTenant = async (tenantId) => {
     if (window.confirm("Are you sure you want to delete this tenant?")) {
       try {
@@ -236,6 +189,7 @@ const TenantManagement = () => {
         setTenants((prev) => prev.filter((t) => t.id !== tenantId));
       } catch (error) {
         console.error("Failed to delete tenant:", error);
+        alert("Failed to delete tenant. Please try again.");
       }
     }
   };
@@ -310,14 +264,7 @@ const TenantManagement = () => {
       {showAddForm && (
         <TenantForm
           isEdit={false}
-          tenantForm={tenantForm}
-          setTenantForm={setTenantForm}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          resetForm={resetForm}
-          properties={properties}
           handleAddTenant={handleAddTenant}
-          setShowAddForm={setShowAddForm}
           onClose={() => setShowAddForm(false)}
         />
       )}
@@ -327,15 +274,11 @@ const TenantManagement = () => {
         <table className="w-full border-collapse text-md md:text-md hidden md:table">
           <thead>
             <tr className="bg-gray-100 text-left">
-              <th className="p-2 md:p-3 border-b border-gray-200">
-                Tenant Name
-              </th>
+              <th className="p-2 md:p-3 border-b border-gray-200">Tenant Name</th>
               <th className="p-2 md:p-3 border-b border-gray-200">Property</th>
               <th className="p-2 md:p-3 border-b border-gray-200">Unit</th>
               <th className="p-2 md:p-3 border-b border-gray-200">Join Date</th>
-              <th className="p-2 md:p-3 border-b border-gray-200">
-                Contract Type
-              </th>
+              <th className="p-2 md:p-3 border-b border-gray-200">Contract Type</th>
               <th className="p-2 md:p-3 border-b border-gray-200">Status</th>
               <th className="p-2 md:p-3 border-b border-gray-200">Actions</th>
             </tr>
@@ -357,18 +300,11 @@ const TenantManagement = () => {
                     {tenant.firstName} {tenant.lastName}
                   </td>
                   <td className="p-2 md:p-3 border-b border-gray-200">
-                    {tenant.property?.name || "Unknown Property"}
+                    {tenant.property || "Unknown Property"}
                   </td>
-
-                  <td className="p-2 md:p-3 border-b border-gray-200">
-                    {tenant.unit}
-                  </td>
-                  <td className="p-2 md:p-3 border-b border-gray-200">
-                    {tenant.joinDate}
-                  </td>
-                  <td className="p-2 md:p-3 border-b border-gray-200">
-                    {tenant.contractType}
-                  </td>
+                  <td className="p-2 md:p-3 border-b border-gray-200">{tenant.unit}</td>
+                  <td className="p-2 md:p-3 border-b border-gray-200">{tenant.joinDate}</td>
+                  <td className="p-2 md:p-3 border-b border-gray-200">{tenant.contractType}</td>
                   <td className="p-2 md:p-3 border-b border-gray-200">
                     <span
                       className={`px-2 py-0.5 md:px-2 md:py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -401,13 +337,6 @@ const TenantManagement = () => {
                       >
                         <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
-                      {/* <button
-                        onClick={() => generateContract(tenant)}
-                        className="p-1 md:p-2 text-black hover:bg-green-50 rounded-lg"
-                        title="Generate Contract"
-                      >
-                        <FileText className="w-3 h-3 md:w-4 md:h-4" />
-                      </button> */}
                     </div>
                   </td>
                 </tr>
@@ -430,30 +359,22 @@ const TenantManagement = () => {
               >
                 <div className="flex flex-col gap-2 text-md">
                   <div>
-                    <span className="font-medium text-gray-900">
-                      Tenant Name:
-                    </span>{" "}
+                    <span className="font-medium text-gray-900">Tenant Name:</span>{" "}
                     {tenant.firstName} {tenant.lastName}
                   </div>
                   <div>
                     <span className="font-medium text-gray-900">Property:</span>{" "}
-                    {tenant.property?.name || "Unknown Property"}
-                  </div>
-
-                  <div>
-                    <span className="font-medium text-gray-900">Unit:</span>{" "}
-                    {tenant.unit}
+                    {tenant.property || "Unknown Property"}
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">
-                      Join Date:
-                    </span>{" "}
+                    <span className="font-medium text-gray-900">Unit:</span> {tenant.unit}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-900">Join Date:</span>{" "}
                     {tenant.joinDate}
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">
-                      Contract Type:
-                    </span>{" "}
+                    <span className="font-medium text-gray-900">Contract Type:</span>{" "}
                     {tenant.contractType}
                   </div>
                   <div>
@@ -488,13 +409,6 @@ const TenantManagement = () => {
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
-                    {/* <button
-                      onClick={() => generateContract(tenant)}
-                      className="p-1 text-green-600 hover:bg-green-50 rounded-lg"
-                      title="Generate Contract"
-                    >
-                      <FileText className="w-5 h-5" />
-                    </button> */}
                   </div>
                 </div>
               </div>
@@ -504,23 +418,19 @@ const TenantManagement = () => {
       </div>
 
       {/* Edit Tenant Modal */}
-      {showEditModal && (
+      {showEditModal && selectedTenant && (
         <TenantForm
           isEdit={true}
-          tenantForm={tenantForm}
-          setTenantForm={setTenantForm}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          resetForm={resetForm}
-          properties={properties}
+          tenantForm={selectedTenant}
           handleEditTenant={handleEditTenant}
-          setShowEditModal={setShowEditModal}
-              onClose={() => setShowEditModal(false)}
-
+          handleAddTenant={handleAddTenant}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedTenant(null);
+          }}
         />
       )}
 
-      {/* Other Modals */}
       {/* View Tenant Modal */}
       {showViewModal && selectedTenant && (
         <ViewTenantModal

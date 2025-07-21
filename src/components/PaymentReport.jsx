@@ -1,20 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { FaEdit, FaFilePdf } from "react-icons/fa";
 import { jsPDF } from "jspdf";
-import logo from "../assets/inv-logo.svg"; // Adjust path if needed
+import logo from "../assets/inv-logo.svg";
+import api from "../Pages/utils/axios";
 
 const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
   const [paymentData, setPaymentData] = useState(initialPaymentData);
   const [paymentSearchTerm, setPaymentSearchTerm] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [currentTenantId, setCurrentTenantId] = useState(null);
+  const [currentPaymentIndex, setCurrentPaymentIndex] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [currentPaymentId, setCurrentPaymentId] = useState(null);
-  const [formData, setFormData] = useState({
-    amount: "",
-    paymentMethod: "",
-    notes: "",
-    date: new Date().toLocaleDateString("en-GB"),
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      amount: "",
+      paymentMethod: "",
+      paymentMode: "",
+      notes: "",
+      date: new Date().toISOString().slice(0, 10),
+      status: "Unpaid",
+    },
   });
+
+  const status = watch("status");
 
   const filteredPayments = paymentData.filter((payment) => {
     const matchesSearch =
@@ -31,62 +50,112 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
     return matchesSearch && matchesStatus;
   });
 
-  const updatePaymentStatus = (
-    id,
-    newStatus,
-    paymentMethod = "",
-    paidOn = "",
-    amount = "",
-    notes = ""
-  ) => {
-    setPaymentData((prevData) =>
-      prevData.map((payment) => {
-        if (payment.id === id) {
-          return {
-            ...payment,
-            status: newStatus,
-            paidOn: newStatus === "Paid" ? paidOn : "-",
-            paymentMethod: newStatus === "Paid" ? paymentMethod : "-",
-            amount: newStatus === "Paid" ? amount : payment.amount,
-            notes: newStatus === "Paid" ? notes : "-",
-          };
-        }
-        return payment;
-      })
-    );
+  const openEditModal = (payment, index) => {
+    setCurrentTenantId(payment.tenantId);
+    setCurrentPaymentIndex(index);
+
+    setValue("amount", payment.amount);
+    setValue("paymentMethod", payment.paymentMethod || "");
+    setValue("paymentMode", payment.paymentMode || "Full");
+    setValue("notes", payment.notes || "");
+    setCurrentPaymentId(payment.id);
+
+    const paidOnDate = payment.paidOn ? new Date(payment.paidOn) : new Date();
+    const validDate = isNaN(paidOnDate.getTime()) ? new Date() : paidOnDate;
+    setValue("date", validDate.toISOString().slice(0, 10));
+
+    setValue("status", payment.status);
+
+    setShowModal(true);
   };
 
-  const handleStatusChange = (id, newStatus) => {
-    const payment = paymentData.find((p) => p.id === id);
-    if (payment.status === "Paid") {
-      alert(
-        "Sorry, payments marked as 'Paid' can only be edited via the Edit button."
+  const tenantMap = paymentData.reduce((acc, payment) => {
+    if (!acc[payment.tenantId]) {
+      acc[payment.tenantId] = {
+        tenantId: payment.tenantId,
+        tenantName: payment.tenantName,
+        rent: payment.rent,
+        ownerEmail: payment.ownerEmail,
+        paymentHistory: [],
+      };
+    }
+    acc[payment.tenantId].paymentHistory.push(payment);
+    return acc;
+  }, {});
+
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      if (!currentTenantId) {
+        alert("❌ Tenant ID not set!");
+        setLoading(false);
+        return;
+      }
+
+      const tenant = tenantMap[currentTenantId];
+
+      if (!tenant?.paymentHistory) {
+        alert("❌ Payment history not found!");
+        setLoading(false);
+        return;
+      }
+
+     const updatedPaymentHistory = tenant.paymentHistory.map((payment) => {
+  if (payment.id === currentPaymentId) {
+    const rent = Number(tenant.rent);
+    const updatedAmount = Number(data.amount);
+
+    return {
+      ...payment,
+      amount: updatedAmount,
+      paidOn: data.date === "-" || !data.date ? null : data.date,
+      paymentMethod: data.paymentMethod,
+      paymentMode: data.paymentMode,
+      notes: data.notes,
+      status:
+        updatedAmount >= rent
+          ? "Paid"
+          : updatedAmount > 0
+          ? "Partial"
+          : "Unpaid",
+    };
+  }
+  return payment;
+});
+
+
+      const tenantMongoId = tenant._id || currentTenantId;
+
+      const response = await api.put(
+        `/tenants/${tenantMongoId}?testEmail=${tenant.ownerEmail}`,
+        { paymentHistory: updatedPaymentHistory }
       );
-      return;
-    }
 
-    if (newStatus === "Paid") {
-      setCurrentPaymentId(id);
-      setFormData({
-        amount: payment.amount,
-        paymentMethod: "",
-        notes: "",
-        date: new Date().toLocaleDateString("en-GB"),
-      });
-      setShowModal(true);
-    }
-  };
+      console.log("✅ Payment Updated:", response.data);
 
-  const handleFormSubmit = () => {
-    updatePaymentStatus(
-      currentPaymentId,
-      "Paid",
-      formData.paymentMethod,
-      formData.date,
-      formData.amount,
-      formData.notes
-    );
-    setShowModal(false);
+      const updatedPayments = updatedPaymentHistory.map((payment, idx) => ({
+        ...payment,
+        id: `${tenantMongoId}-${idx}`,
+        tenantId: tenantMongoId,
+        tenantName: tenant.tenantName,
+        rent: tenant.rent,
+        ownerEmail: tenant.ownerEmail,
+      }));
+
+      setPaymentData((prev) => [
+        ...prev.filter((p) => p.tenantId !== tenantMongoId),
+        ...updatedPayments,
+      ]);
+
+      alert("✅ Payment updated");
+      setShowModal(false);
+      reset();
+    } catch (error) {
+      console.error("❌ Error:", error);
+      alert(error?.response?.data?.message || "Payment update failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const generateInvoicePDF = (payment) => {
@@ -96,12 +165,10 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
       format: "letter",
     });
 
-    // Title
     doc.setFontSize(20);
-    doc.setTextColor(22, 82, 161); // #1652A1
+    doc.setTextColor(22, 82, 161);
     doc.text("Invoice", 0.5, 0.8);
 
-    // Payment Details
     doc.setFontSize(14);
     doc.text("Payment Details", 0.5, 1.2);
     doc.setFontSize(12);
@@ -111,6 +178,7 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
       `Tenant Name: ${payment.tenantName}`,
       `Invoice Month: ${payment.invoiceMonth}`,
       `Invoice Type: ${payment.invoiceType}`,
+      `Monthly Rent: ${payment.rent}`,
       `Amount: ${payment.amount}`,
       `Payment Date: ${payment.paidOn}`,
       `Payment Method: ${payment.paymentMethod}`,
@@ -121,11 +189,10 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
       doc.text(line, 0.5, 1.5 + index * 0.3);
     });
 
-    // Footer
     doc.setLineWidth(0.01);
-    doc.line(0.5, 3.8, 8.0, 3.8); // Horizontal line
+    doc.line(0.5, 3.8, 8.0, 3.8);
     doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100); // Gray
+    doc.setTextColor(100, 100, 100);
     doc.text(
       `Generated on: ${new Date().toLocaleDateString("en-GB")}`,
       0.5,
@@ -133,7 +200,6 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
     );
     doc.text("Thank you for your payment!", 0.5, 4.2);
 
-    // Save the PDF
     doc.save(`Invoice_${payment.tenantName}_${payment.invoiceMonth}.pdf`);
   };
 
@@ -141,7 +207,6 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
     <div>
       <h2 className="text-2xl mb-3 text-[#1652A1]">Payment Report</h2>
 
-      {/* Payment Status Indicators */}
       <div className="flex gap-3 mb-5 flex-wrap">
         {Object.entries(paymentStatusColors).map(([label, color]) => {
           const isActive = paymentStatusFilter === label;
@@ -166,7 +231,6 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
         })}
       </div>
 
-      {/* Payment Search Bar */}
       <div className="mb-5">
         <input
           type="text"
@@ -177,13 +241,15 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
         />
       </div>
 
-      {/* Payment Table */}
       <div className="overflow-x-auto w-full">
         <table className="w-full border-collapse text-sm md:text-md hidden md:table">
           <thead>
             <tr className="bg-gray-100 text-left text-[#1652A1]">
               <th className="p-2 md:p-3 border-b border-gray-200">
                 Tenant Name
+              </th>
+              <th className="p-2 md:p-3 border-b border-gray-200">
+                Monthly Rent
               </th>
               <th className="p-2 md:p-3 border-b border-gray-200">Amount</th>
               <th className="p-2 md:p-3 border-b border-gray-200">
@@ -192,31 +258,23 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
               <th className="p-2 md:p-3 border-b border-gray-200">
                 Invoice Type
               </th>
-              <th className="p-2 md:p-3 border-b border-gray-200">
-                Payment Mode
-              </th>{" "}
-              {/* ✅ NEW COLUMN */}
               <th className="p-2 md:p-3 border-b border-gray-200">Status</th>
               <th className="p-2 md:p-3 border-b border-gray-200">Paid On</th>
               <th className="p-2 md:p-3 border-b border-gray-200">
                 Payment Method
               </th>
-              <th className="p-2 md:p-3 border-b border-gray-200">Actions</th>{" "}
-              {/* ✅ Updated label */}
+              <th className="p-2 md:p-3 border-b border-gray-200">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredPayments.length > 0 ? (
-              filteredPayments.map((payment) => (
+              filteredPayments.map((payment, index) => (
                 <tr key={payment.id} className="border-b">
                   <td className="p-2 md:p-3">{payment.tenantName}</td>
+                  <td className="p-2 md:p-3 font-semibold">{payment.rent}</td>
                   <td className="p-2 md:p-3 font-semibold">{payment.amount}</td>
                   <td className="p-2 md:p-3">{payment.invoiceMonth}</td>
                   <td className="p-2 md:p-3">{payment.invoiceType}</td>
-                  <td className="p-2 md:p-3">
-                    {payment.paymentMode || "Full"}
-                  </td>{" "}
-                  {/* ✅ NEW CELL */}
                   <td className="p-2 md:p-3">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
@@ -229,19 +287,9 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
                   <td className="p-2 md:p-3">{payment.paidOn}</td>
                   <td className="p-2 md:p-3">{payment.paymentMethod}</td>
                   <td className="p-2 md:p-3 flex items-center gap-2">
-                    {/* ✅ Removed the status select; only show edit & PDF buttons */}
                     <button
                       className="text-[#1652A1] hover:text-blue-700"
-                      onClick={() => {
-                        setCurrentPaymentId(payment.id);
-                        setFormData({
-                          amount: payment.amount,
-                          paymentMethod: payment.paymentMethod,
-                          notes: payment.notes || "",
-                          date: payment.paidOn,
-                        });
-                        setShowModal(true);
-                      }}
+                      onClick={() => openEditModal(payment, index)}
                     >
                       <FaEdit className="w-4 h-4" />
                     </button>
@@ -257,7 +305,7 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
             ) : (
               <tr>
                 <td
-                  colSpan="9" // ✅ Updated colspan to match new column count
+                  colSpan="8"
                   className="text-center py-3 md:py-4 text-gray-500 text-sm md:text-md"
                 >
                   No payment records found.
@@ -266,110 +314,105 @@ const PaymentReport = ({ initialPaymentData, paymentStatusColors }) => {
             )}
           </tbody>
         </table>
+      </div>
 
-        {/* Modal */}
-        {showModal && (
-          <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md bg-black/30 z-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4 text-[#1652A1]">
-                {paymentData.find((p) => p.id === currentPaymentId)?.status ===
-                "Paid"
-                  ? "Edit Payment Info"
-                  : "Mark as Paid"}
-              </h3>
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md bg-black/30 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4 text-[#1652A1]">
+              Update Payment
+            </h3>
 
-              <div className="mb-2">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+              <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Date
                 </label>
                 <input
-                  type="text"
+                  type="date"
+                  {...register("date", { required: "Date is required" })}
                   className="w-full p-2 border rounded"
-                  value={formData.date}
-                  disabled
                 />
+                {errors.date && (
+                  <p className="text-red-500 text-sm">{errors.date.message}</p>
+                )}
               </div>
 
-              <div className="mb-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Amount
                 </label>
                 <input
-                  type="text"
+                  type="number"
+                  {...register("amount", {
+                    required: "Amount is required",
+                    min: { value: 1, message: "Amount must be greater than 0" },
+                    valueAsNumber: true,
+                  })}
                   className="w-full p-2 border rounded"
-                  value={formData.amount}
-                  onChange={(e) =>
-                    setFormData({ ...formData, amount: e.target.value })
-                  }
                 />
+                {errors.amount && (
+                  <p className="text-red-500 text-sm">
+                    {errors.amount.message}
+                  </p>
+                )}
               </div>
 
-              <div className="mb-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Payment Method
                 </label>
                 <input
                   type="text"
+                  {...register("paymentMethod", {
+                    required: "Payment Method is required",
+                  })}
+                  placeholder="Cash, UPI, Bank Transfer..."
                   className="w-full p-2 border rounded"
-                  placeholder="Bank Transfer, UPI, Cash..."
-                  value={formData.paymentMethod}
-                  onChange={(e) =>
-                    setFormData({ ...formData, paymentMethod: e.target.value })
-                  }
                 />
+                {errors.paymentMethod && (
+                  <p className="text-red-500 text-sm">
+                    {errors.paymentMethod.message}
+                  </p>
+                )}
               </div>
 
-              {/* ✅ New Payment Mode Dropdown */}
-              <div className="mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Payment Mode
-                </label>
-                <select
-                  className="w-full p-2 border rounded text-sm"
-                  value={formData.paymentMode || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, paymentMode: e.target.value })
-                  }
-                >
-                  <option value="">Select payment mode</option>
-                  <option value="Full">Full Payment</option>
-                  <option value="Split">Split Payment</option>
-                  <option value="Partial">Partial Payment</option>
-                </select>
-              </div>
-
-              <div className="mb-4">
+              <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Notes / Memo
                 </label>
                 <textarea
+                  {...register("notes")}
                   className="w-full p-2 border rounded"
                   rows="2"
-                  value={formData.notes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
                 />
               </div>
 
               <div className="flex justify-end gap-3">
                 <button
+                  type="button"
                   className="px-4 py-2 text-sm bg-gray-300 rounded"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    reset();
+                  }}
                 >
                   Cancel
                 </button>
                 <button
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded"
-                  onClick={handleFormSubmit}
+                  type="submit"
+                  className={`px-4 py-2 text-sm bg-blue-600 text-white rounded ${
+                    loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={loading}
                 >
-                  Submit
+                  {loading ? "Submitting..." : "Submit"}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
